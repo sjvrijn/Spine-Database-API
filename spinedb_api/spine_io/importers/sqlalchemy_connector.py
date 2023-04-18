@@ -69,8 +69,7 @@ class SqlAlchemyConnector(SourceConnection):
         Returns:
             list of str: Table names in list
         """
-        tables = list(self._engine.table_names())
-        return tables
+        return list(self._engine.table_names())
 
     def get_data_iterator(self, table, options, max_rows=-1):
         """Creates an iterator for the database connection.

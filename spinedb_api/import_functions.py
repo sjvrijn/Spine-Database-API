@@ -1016,7 +1016,7 @@ def _get_object_groups_for_import(db_map, data, make_cache):
     object_ids = {(o.class_id, o.name): o.id for o in cache.get("object", {}).values()}
     objects = {}
     for obj in cache.get("object", {}).values():
-        objects.setdefault(obj.class_id, dict())[obj.id] = obj._asdict()
+        objects.setdefault(obj.class_id, {})[obj.id] = obj._asdict()
     entity_group_ids = {(x.group_id, x.member_id): x.id for x in cache.get("entity_group", {}).values()}
     error_log = []
     to_add = []
@@ -1062,7 +1062,9 @@ def import_relationships(db_map, data, make_cache=None):
 
 
 def _make_unique_relationship_name(class_id, class_name, object_names, class_id_name_tuples):
-    base_name = class_name + "_" + "__".join([obj if obj is not None else "None" for obj in object_names])
+    base_name = f"{class_name}_" + "__".join(
+        [obj if obj is not None else "None" for obj in object_names]
+    )
     name = base_name
     while (class_id, name) in class_id_name_tuples:
         name = base_name + uuid.uuid4().hex
@@ -1620,7 +1622,7 @@ def _get_list_values_for_import(db_map, data, make_cache, unparse_value):
     to_add = []
     to_update = []
     seen_values = set()
-    max_indexes = dict()
+    max_indexes = {}
     for list_name, value in data:
         try:
             list_id, value_index_list = value_lists_by_name.get(list_name)

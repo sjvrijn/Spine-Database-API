@@ -77,9 +77,7 @@ def scenario_name_from_dict(config):
     Returns:
         str: scenario name or None if ``config`` is not a valid scenario filter configuration
     """
-    if config["type"] != SCENARIO_FILTER_TYPE:
-        return None
-    return config["scenario"]
+    return None if config["type"] != SCENARIO_FILTER_TYPE else config["scenario"]
 
 
 def scenario_filter_config_to_shorthand(config):
@@ -92,7 +90,7 @@ def scenario_filter_config_to_shorthand(config):
     Returns:
         str: a shorthand string
     """
-    return SCENARIO_SHORTHAND_TAG + ":" + config["scenario"]
+    return f"{SCENARIO_SHORTHAND_TAG}:" + config["scenario"]
 
 
 def scenario_filter_shorthand_to_config(shorthand):

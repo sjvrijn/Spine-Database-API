@@ -42,7 +42,7 @@ class TestDatabaseMappingBase(unittest.TestCase):
         cls._db_map.connection.close()
 
     def test_construction_with_filters(self):
-        db_url = IN_MEMORY_DB_URL + "?spinedbfilter=fltr1&spinedbfilter=fltr2"
+        db_url = f"{IN_MEMORY_DB_URL}?spinedbfilter=fltr1&spinedbfilter=fltr2"
         with patch("spinedb_api.db_mapping.apply_filter_stack") as mock_apply:
             with patch(
                 "spinedb_api.db_mapping.load_filters", return_value=[{"fltr1": "config1", "fltr2": "config2"}]
@@ -404,7 +404,7 @@ class TestDatabaseMappingBaseQueries(unittest.TestCase):
         entity_rows = self._db_map.query(self._db_map.entity_sq).all()
         self.assertEqual(len(entity_rows), len(objects) + len(relationships))
         object_names = [o[1] for o in objects]
-        relationship_names = [r[0] + "_" + "__".join(r[1]) for r in relationships]
+        relationship_names = [f"{r[0]}_" + "__".join(r[1]) for r in relationships]
         for row, expected_name in zip(entity_rows, object_names + relationship_names):
             self.assertEqual(row.name, expected_name)
 
@@ -444,7 +444,7 @@ class TestDatabaseMappingBaseQueries(unittest.TestCase):
         relationship_rows = self._db_map.query(self._db_map.wide_relationship_sq).all()
         self.assertEqual(len(relationship_rows), 2)
         for row, relationship in zip(relationship_rows, relationships):
-            self.assertEqual(row.name, relationship[0] + "_" + "__".join(relationship[1]))
+            self.assertEqual(row.name, f"{relationship[0]}_" + "__".join(relationship[1]))
             self.assertEqual(row.class_name, relationship[0])
             self.assertEqual(row.object_class_name_list, ",".join(object_classes[relationship[0]]))
             self.assertEqual(row.object_name_list, ",".join(relationship[1]))

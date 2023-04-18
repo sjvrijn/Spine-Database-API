@@ -192,9 +192,9 @@ def relationship_export(
         ExportMapping: root mapping
     """
     if object_class_positions is None:
-        object_class_positions = list()
+        object_class_positions = []
     if object_positions is None:
-        object_positions = list()
+        object_positions = []
     relationship_class = RelationshipClassMapping(relationship_class_position)
     object_or_relationship_class = _generate_dimensions(
         relationship_class, RelationshipClassObjectClassMapping, object_class_positions
@@ -269,9 +269,9 @@ def relationship_parameter_export(
         ExportMapping: root mapping
     """
     if object_class_positions is None:
-        object_class_positions = list()
+        object_class_positions = []
     if object_positions is None:
-        object_positions = list()
+        object_positions = []
     relationship_class = RelationshipClassMapping(relationship_class_position)
     object_or_relationship_class = _generate_dimensions(
         relationship_class, RelationshipClassObjectClassMapping, object_class_positions
@@ -371,9 +371,9 @@ def relationship_object_parameter_export(
         ExportMapping: root mapping
     """
     if object_class_positions is None:
-        object_class_positions = list()
+        object_class_positions = []
     if object_positions is None:
-        object_positions = list()
+        object_positions = []
     relationship_class = RelationshipClassObjectHighlightingMapping(
         relationship_class_position, highlight_dimension=highlight_dimension
     )
@@ -725,12 +725,11 @@ def _change_amount_of_consecutive_mappings(mapping_list, after_class, new_class,
     new_mappings = [new_class(Position.hidden) for _ in range(new_count)]
     first_consecutive_index = parent_index + 1
     last_consecutive_index = first_consecutive_index + old_count
-    final_mapping_list = (
+    return (
         mapping_list[: first_consecutive_index + min(count, old_count)]
         + new_mappings
         + mapping_list[last_consecutive_index:]
     )
-    return final_mapping_list
 
 
 def _change_amount_of_dimensions(

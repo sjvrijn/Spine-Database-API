@@ -74,7 +74,7 @@ class TestSqlWriter(unittest.TestCase):
         write(db_map, writer, root_mapping)
         db_map.connection.close()
         self.assertTrue(out_path.exists())
-        engine = create_engine("sqlite:///" + str(out_path))
+        engine = create_engine(f"sqlite:///{str(out_path)}")
         connection = engine.connect()
         try:
             metadata = MetaData()
@@ -106,7 +106,7 @@ class TestSqlWriter(unittest.TestCase):
         write(db_map, writer, root_mapping)
         db_map.connection.close()
         self.assertTrue(out_path.exists())
-        engine = create_engine("sqlite:///" + str(out_path))
+        engine = create_engine(f"sqlite:///{str(out_path)}")
         connection = engine.connect()
         try:
             metadata = MetaData()
@@ -145,7 +145,7 @@ class TestSqlWriter(unittest.TestCase):
         write(db_map, writer, root_mapping)
         db_map.connection.close()
         self.assertTrue(out_path.exists())
-        engine = create_engine("sqlite:///" + str(out_path))
+        engine = create_engine(f"sqlite:///{str(out_path)}")
         connection = engine.connect()
         try:
             metadata = MetaData()
@@ -185,7 +185,7 @@ class TestSqlWriter(unittest.TestCase):
         write(db_map, writer, root_mapping)
         db_map.connection.close()
         self.assertTrue(out_path.exists())
-        engine = create_engine("sqlite:///" + str(out_path))
+        engine = create_engine(f"sqlite:///{str(out_path)}")
         connection = engine.connect()
         try:
             metadata = MetaData()
@@ -220,7 +220,7 @@ class TestSqlWriter(unittest.TestCase):
         write(db_map, writer, root_mapping2)
         db_map.connection.close()
         self.assertTrue(out_path.exists())
-        engine = create_engine("sqlite:///" + str(out_path))
+        engine = create_engine(f"sqlite:///{str(out_path)}")
         connection = engine.connect()
         try:
             metadata = MetaData()
@@ -245,7 +245,7 @@ class TestSqlWriter(unittest.TestCase):
         import_objects(db_map, (("oc", "o1"),))
         db_map.commit_session("Add test data.")
         out_path = Path(self._temp_dir.name, "out.sqlite")
-        out_engine = create_engine("sqlite:///" + str(out_path))
+        out_engine = create_engine(f"sqlite:///{str(out_path)}")
         out_connection = out_engine.connect()
         try:
             metadata = MetaData()
@@ -260,7 +260,7 @@ class TestSqlWriter(unittest.TestCase):
         write(db_map, writer, root_mapping)
         db_map.connection.close()
         self.assertTrue(out_path.exists())
-        engine = create_engine("sqlite:///" + str(out_path))
+        engine = create_engine(f"sqlite:///{str(out_path)}")
         connection = engine.connect()
         try:
             metadata = MetaData()

@@ -107,7 +107,7 @@ def load_filters(configs):
     Returns:
         list of dict: filter stack
     """
-    stack = list()
+    stack = []
     for config in configs:
         if isinstance(config, str):
             with open(config) as config_file:
@@ -162,14 +162,14 @@ def append_filter_config(url, config):
     """
     url = urlparse(url)
     query = parse_qs(url.query)
-    filters = query.setdefault(FILTER_IDENTIFIER, list())
+    filters = query.setdefault(FILTER_IDENTIFIER, [])
     if isinstance(config, dict):
         config = config_to_shorthand(config)
     if config not in filters:
         filters.append(config)
     url = url._replace(query=urlencode(query, doseq=True))
     if not url.hostname:
-        url = url._replace(path="//" + url.path)
+        url = url._replace(path=f"//{url.path}")
     return url.geturl()
 
 
@@ -189,7 +189,7 @@ def filter_configs(url):
         filters = query[FILTER_IDENTIFIER]
     except KeyError:
         return []
-    parsed_filters = list()
+    parsed_filters = []
     for filter_ in filters:
         if filter_.startswith(SHORTHAND_TAG):
             parsed_filters.append(_parse_shorthand(filter_[len(SHORTHAND_TAG) :]))
@@ -214,7 +214,7 @@ def pop_filter_configs(url):
         filters = query.pop(FILTER_IDENTIFIER)
     except KeyError:
         return [], url
-    parsed_filters = list()
+    parsed_filters = []
     for filter_ in filters:
         if filter_.startswith(SHORTHAND_TAG):
             parsed_filters.append(_parse_shorthand(filter_[len(SHORTHAND_TAG) :]))
@@ -222,7 +222,7 @@ def pop_filter_configs(url):
             parsed_filters.append(filter_)
     parsed = parsed._replace(query=urlencode(query, doseq=True))
     if not parsed.hostname:
-        parsed = parsed._replace(path="//" + parsed.path)
+        parsed = parsed._replace(path=f"//{parsed.path}")
     return parsed_filters, urlunparse(parsed)
 
 
@@ -242,7 +242,9 @@ def clear_filter_configs(url):
         del query[FILTER_IDENTIFIER]
     except KeyError:
         return url
-    parsed = parsed._replace(query=urlencode(query, doseq=True), path="//" + parsed.path)
+    parsed = parsed._replace(
+        query=urlencode(query, doseq=True), path=f"//{parsed.path}"
+    )
     return urlunparse(parsed)
 
 
@@ -331,6 +333,4 @@ def name_from_dict(config):
         str: name or None if ``config`` is not a valid 'name' filter configuration
     """
     func = {SCENARIO_FILTER_TYPE: scenario_name_from_dict, TOOL_FILTER_TYPE: tool_name_from_dict}.get(config["type"])
-    if func is None:
-        return None
-    return func(config)
+    return None if func is None else func(config)

@@ -163,7 +163,7 @@ class DatabaseMappingAddMixin:
         if return_items:
             return checked_items, intgr_error_log
         if return_dups:
-            ids.update(set(x.id for x in intgr_error_log if x.id))
+            ids.update({x.id for x in intgr_error_log if x.id})
         return ids, intgr_error_log
 
     def _add_items(self, tablename, *items):
@@ -223,22 +223,22 @@ class DatabaseMappingAddMixin:
             tuple: database table name, items to add
         """
         if tablename == "object_class":
-            oc_items_to_add = list()
+            oc_items_to_add = []
             append_oc_items_to_add = oc_items_to_add.append
             for item in items_to_add:
                 append_oc_items_to_add({"entity_class_id": item["id"], "type_id": self.object_class_type})
             yield ("entity_class", items_to_add)
             yield ("object_class", oc_items_to_add)
         elif tablename == "object":
-            o_items_to_add = list()
+            o_items_to_add = []
             append_o_items_to_add = o_items_to_add.append
             for item in items_to_add:
                 append_o_items_to_add({"entity_id": item["id"], "type_id": item["type_id"]})
             yield ("entity", items_to_add)
             yield ("object", o_items_to_add)
         elif tablename == "relationship_class":
-            rc_items_to_add = list()
-            rec_items_to_add = list()
+            rc_items_to_add = []
+            rec_items_to_add = []
             for item in items_to_add:
                 rc_items_to_add.append({"entity_class_id": item["id"], "type_id": self.relationship_class_type})
                 rec_items_to_add += get_relationship_entity_class_items(item, self.object_class_type)
@@ -246,8 +246,8 @@ class DatabaseMappingAddMixin:
             yield ("relationship_class", rc_items_to_add)
             yield ("relationship_entity_class", rec_items_to_add)
         elif tablename == "relationship":
-            re_items_to_add = list()
-            r_items_to_add = list()
+            re_items_to_add = []
+            r_items_to_add = []
             for item in items_to_add:
                 r_items_to_add.append(
                     {
@@ -373,16 +373,20 @@ class DatabaseMappingAddMixin:
             *items, check=check, strict=strict, cache=cache
         )
         if metadata_errors:
-            if not return_items:
-                return added_metadata, metadata_errors
-            return {i["id"] for i in added_metadata}, metadata_errors
+            return (
+                ({i["id"] for i in added_metadata}, metadata_errors)
+                if return_items
+                else (added_metadata, metadata_errors)
+            )
         added_item_metadata, item_errors = self.add_items(
             table_name, *items, check=check, strict=strict, return_items=True, cache=cache
         )
         errors = metadata_errors + item_errors
-        if not return_items:
-            return {i["id"] for i in added_metadata + added_item_metadata}, errors
-        return added_metadata + added_item_metadata, errors
+        return (
+            (added_metadata + added_item_metadata, errors)
+            if return_items
+            else ({i["id"] for i in added_metadata + added_item_metadata}, errors)
+        )
 
     def add_ext_entity_metadata(self, *items, check=True, strict=False, return_items=False, cache=None, readd=False):
         return self._add_ext_item_metadata(

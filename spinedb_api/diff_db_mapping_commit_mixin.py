@@ -82,7 +82,7 @@ class DiffDatabaseMappingCommitMixin:
             if self._memory:
                 self._memory_dirty = True
         except DBAPIError as e:
-            msg = "DBAPIError while committing changes: {}".format(e.orig.args)
+            msg = f"DBAPIError while committing changes: {e.orig.args}"
             raise SpineDBAPIError(msg) from None
 
     def rollback_session(self):
@@ -98,7 +98,7 @@ class DiffDatabaseMappingCommitMixin:
             transaction.commit()
             self._reset_diff_dicts()
         except DBAPIError as e:
-            msg = "DBAPIError while rolling back changes: {}".format(e.orig.args)
+            msg = f"DBAPIError while rolling back changes: {e.orig.args}"
             raise SpineDBAPIError(msg) from None
 
     def has_pending_changes(self):

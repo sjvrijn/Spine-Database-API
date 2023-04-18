@@ -66,8 +66,11 @@ def purge(db_map, purge_settings, logger=None):
     removable_db_map_data = {
         item_type: _ids_for_item_type(db_map, item_type) for item_type, checked in purge_settings.items() if checked
     }
-    removable_db_map_data = {item_type: ids for item_type, ids in removable_db_map_data.items() if ids}
-    if removable_db_map_data:
+    if removable_db_map_data := {
+        item_type: ids
+        for item_type, ids in removable_db_map_data.items()
+        if ids
+    }:
         try:
             if logger:
                 logger.msg.emit("Purging database...")

@@ -70,9 +70,7 @@ class ImportKey(Enum):
             self.TOOL_FEATURE.value: "Entity class names",
             self.TOOL_FEATURE_METHOD.value: "Entity class names",
         }.get(self.value)
-        if name is not None:
-            return name
-        return super().__str__()
+        return name if name is not None else super().__str__()
 
 
 class KeyFix(Exception):
@@ -123,12 +121,11 @@ class ImportMapping(Mapping):
             self._skip_columns = [skip_columns]
             return
         if isinstance(skip_columns, list):
-            bad_types = [
+            if bad_types := [
                 f"{type(column).__name__} at index {i}"
                 for i, column in enumerate(skip_columns)
                 if not isinstance(column, (str, int))
-            ]
-            if bad_types:
+            ]:
                 bad_types = ", ".join(bad_types)
                 raise TypeError(f"skip_columns must be str, int or list of str, int, instead got list with {bad_types}")
             self._skip_columns = skip_columns
@@ -205,9 +202,7 @@ class ImportMapping(Mapping):
 
     @property
     def rank(self):
-        if self.parent is None:
-            return 0
-        return self.parent.rank + 1
+        return 0 if self.parent is None else self.parent.rank + 1
 
     def _filter_accepts_row(self, source_row):
         """Whether or not the row passes the filter for this mapping."""
@@ -241,7 +236,7 @@ class ImportMapping(Mapping):
             return
         if errors is None:
             errors = []
-        if not (self.position == Position.hidden and self.value is None):
+        if self.position != Position.hidden or self.value is not None:
             source_data = self._data(source_row)
             if source_data is None:
                 self._skip_row(state)
@@ -263,9 +258,7 @@ class ImportMapping(Mapping):
             self.child.import_row(source_row, state, mapped_data, errors=errors)
 
     def _data(self, source_row):  # pylint: disable=arguments-differ
-        if source_row is None:
-            return None
-        return source_row[self.position]
+        return None if source_row is None else source_row[self.position]
 
     def _import_row(self, source_data, state, mapped_data):
         raise NotImplementedError()
@@ -281,9 +274,7 @@ class ImportMapping(Mapping):
             return True
         if self.position == Position.header and self.value is None:
             return True
-        if self.child is None:
-            return False
-        return self.child.is_pivoted()
+        return False if self.child is None else self.child.is_pivoted()
 
     def to_dict(self):
         d = super().to_dict()
@@ -309,8 +300,7 @@ class ImportMapping(Mapping):
         Returns:
             Mapping: reconstructed mapping
         """
-        mapping = cls(position, value, skip_columns, read_start_row, filter_re)
-        return mapping
+        return cls(position, value, skip_columns, read_start_row, filter_re)
 
 
 class ImportObjectsMixin:
@@ -327,8 +317,14 @@ class ImportObjectsMixin:
     @classmethod
     def reconstruct(cls, position, value, skip_columns, read_start_row, filter_re, mapping_dict):
         import_objects = mapping_dict.get("import_objects", False)
-        mapping = cls(position, value, skip_columns, read_start_row, filter_re, import_objects)
-        return mapping
+        return cls(
+            position,
+            value,
+            skip_columns,
+            read_start_row,
+            filter_re,
+            import_objects,
+        )
 
 
 class IndexedValueMixin:
@@ -353,8 +349,15 @@ class IndexedValueMixin:
     def reconstruct(cls, position, value, skip_columns, read_start_row, filter_re, mapping_dict):
         compress = mapping_dict.get("compress", False)
         options = mapping_dict.get("options")
-        mapping = cls(position, value, skip_columns, read_start_row, filter_re, compress, options)
-        return mapping
+        return cls(
+            position,
+            value,
+            skip_columns,
+            read_start_row,
+            filter_re,
+            compress,
+            options,
+        )
 
 
 class ObjectClassMapping(ImportMapping):
@@ -433,7 +436,7 @@ class RelationshipClassMapping(ImportMapping):
         state[ImportKey.RELATIONSHIP_DIMENSION_COUNT] = dim_count
         relationship_class_name = state[ImportKey.RELATIONSHIP_CLASS_NAME] = str(source_data)
         object_class_names = state[ImportKey.OBJECT_CLASS_NAMES] = []
-        relationship_classes = mapped_data.setdefault("relationship_classes", dict())
+        relationship_classes = mapped_data.setdefault("relationship_classes", {})
         relationship_classes[relationship_class_name] = object_class_names
         raise KeyError(ImportKey.OBJECT_CLASS_NAMES)
 
@@ -526,17 +529,18 @@ class ParameterDefinitionMapping(ImportMapping):
             map_key = "object_parameters"
         else:
             relationship_class_name = state.get(ImportKey.RELATIONSHIP_CLASS_NAME)
-            if relationship_class_name is not None:
-                class_name = relationship_class_name
-                map_key = "relationship_parameters"
-            else:
+            if relationship_class_name is None:
                 raise KeyError(ImportKey.CLASS_NAME)
+            class_name = relationship_class_name
+            map_key = "relationship_parameters"
         parameter_name = state[ImportKey.PARAMETER_NAME] = str(source_data)
         definition_extras = state[ImportKey.PARAMETER_DEFINITION_EXTRAS] = []
         parameter_definition_key = state[ImportKey.PARAMETER_DEFINITION] = class_name, parameter_name
         default_values = state.get(ImportKey.PARAMETER_DEFAULT_VALUES)
         if default_values is None or parameter_definition_key not in default_values:
-            mapped_data.setdefault(map_key, dict())[parameter_definition_key] = definition_extras
+            mapped_data.setdefault(map_key, {})[
+                parameter_definition_key
+            ] = definition_extras
 
 
 class ParameterDefaultValueMapping(ImportMapping):
@@ -600,9 +604,7 @@ class IndexNameMappingBase(ImportMapping):
         if self._id is None:
             self._id = 0
             current = self
-            while True:
-                if current.parent is None:
-                    break
+            while current.parent is not None:
                 current = current.parent
                 if isinstance(current, type(self)):
                     self._id += 1
@@ -695,7 +697,7 @@ class ParameterValueMapping(ImportMapping):
         alternative_name = state.get(ImportKey.ALTERNATIVE_NAME)
         if alternative_name is not None:
             parameter_value.append(alternative_name)
-        mapped_data.setdefault(map_key, list()).append(parameter_value)
+        mapped_data.setdefault(map_key, []).append(parameter_value)
 
 
 class ParameterValueTypeMapping(IndexedValueMixin, ImportMapping):
@@ -714,12 +716,11 @@ class ParameterValueTypeMapping(IndexedValueMixin, ImportMapping):
             map_key = "object_parameter_values"
         else:
             relationship_class_name = state.get(ImportKey.RELATIONSHIP_CLASS_NAME)
-            if relationship_class_name is not None:
-                class_name = relationship_class_name
-                entity_name = tuple(state[ImportKey.OBJECT_NAMES])
-                map_key = "relationship_parameter_values"
-            else:
+            if relationship_class_name is None:
                 raise KeyError(ImportKey.CLASS_NAME)
+            class_name = relationship_class_name
+            entity_name = tuple(state[ImportKey.OBJECT_NAMES])
+            map_key = "relationship_parameter_values"
         alternative_name = state.get(ImportKey.ALTERNATIVE_NAME)
         key = (class_name, entity_name, parameter_name, alternative_name)
         if key in values:
@@ -733,7 +734,7 @@ class ParameterValueTypeMapping(IndexedValueMixin, ImportMapping):
         parameter_value = [class_name, entity_name, parameter_name, value]
         if alternative_name is not None:
             parameter_value.append(alternative_name)
-        mapped_data.setdefault(map_key, list()).append(parameter_value)
+        mapped_data.setdefault(map_key, []).append(parameter_value)
 
 
 class ParameterValueMetadataMapping(ImportMapping):
@@ -833,7 +834,9 @@ class ParameterValueListValueMapping(ImportMapping):
         if list_value == "":
             return
         value_list_name = state[ImportKey.PARAMETER_VALUE_LIST_NAME]
-        mapped_data.setdefault("parameter_value_lists", list()).append([value_list_name, list_value])
+        mapped_data.setdefault("parameter_value_lists", []).append(
+            [value_list_name, list_value]
+        )
 
 
 class AlternativeMapping(ImportMapping):
@@ -889,7 +892,7 @@ class ScenarioAlternativeMapping(ImportMapping):
             return
         scenario = state[ImportKey.SCENARIO_NAME]
         scen_alt = state[ImportKey.SCENARIO_ALTERNATIVE] = [scenario, alternative]
-        mapped_data.setdefault("scenario_alternatives", list()).append(scen_alt)
+        mapped_data.setdefault("scenario_alternatives", []).append(scen_alt)
 
 
 class ScenarioBeforeAlternativeMapping(ImportMapping):
@@ -961,7 +964,7 @@ class ToolFeatureEntityClassMapping(ImportMapping):
         entity_class = str(source_data)
         tool_feature = [tool, entity_class]
         state[ImportKey.TOOL_FEATURE] = tool_feature
-        mapped_data.setdefault("tool_features", list()).append(tool_feature)
+        mapped_data.setdefault("tool_features", []).append(tool_feature)
 
 
 class ToolFeatureParameterDefinitionMapping(ImportMapping):
@@ -1005,7 +1008,7 @@ class ToolFeatureMethodEntityClassMapping(ImportMapping):
         entity_class = str(source_data)
         tool_feature_method = [tool_name, entity_class]
         state[ImportKey.TOOL_FEATURE_METHOD] = tool_feature_method
-        mapped_data.setdefault("tool_feature_methods", list()).append(tool_feature_method)
+        mapped_data.setdefault("tool_feature_methods", []).append(tool_feature_method)
 
 
 class ToolFeatureMethodParameterDefinitionMapping(ImportMapping):
@@ -1091,7 +1094,7 @@ def from_dict(serialized):
     }
     # Legacy
     mappings["ParameterIndex"] = ParameterValueIndexMapping
-    flattened = list()
+    flattened = []
     for mapping_dict in serialized:
         position = mapping_dict["position"]
         value = mapping_dict.get("value")
@@ -1150,7 +1153,7 @@ def _default_value_key(state):
     class_name = state.get(ImportKey.OBJECT_CLASS_NAME)
     if class_name is None:
         class_name = state.get(ImportKey.RELATIONSHIP_CLASS_NAME)
-        if class_name is None:
-            raise KeyError(ImportKey.CLASS_NAME)
+    if class_name is None:
+        raise KeyError(ImportKey.CLASS_NAME)
     parameter_name = state[ImportKey.PARAMETER_NAME]
     return class_name, parameter_name

@@ -64,7 +64,9 @@ class GdxConnector(SourceConnection):
             source (str): path to .gdx file.
         """
         if self._gams_dir is None:
-            raise IOError(f"Could not find GAMS directory. Make sure you have GAMS installed.")
+            raise IOError(
+                "Could not find GAMS directory. Make sure you have GAMS installed."
+            )
         self._filename = source
         self._gdx_file = GdxFile(source, gams_dir=self._gams_dir)
 
@@ -82,10 +84,7 @@ class GdxConnector(SourceConnection):
         Returns:
             list(str): Table names in list
         """
-        tables = []
-        for symbol in self._gdx_file:
-            tables.append(symbol[0])
-        return tables
+        return [symbol[0] for symbol in self._gdx_file]
 
     def get_data_iterator(self, table, options, max_rows=-1):
         """Creates an iterator for the data source

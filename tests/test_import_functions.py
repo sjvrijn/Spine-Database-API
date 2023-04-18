@@ -186,7 +186,7 @@ class TestImportRelationshipClass(unittest.TestCase):
         import_object_classes(db_map, ["object_class"])
         _, errors = import_relationship_classes(db_map, [["relationship_class", ["object_class", "nonexistent"]]])
         self.assertTrue(errors)
-        self.assertFalse([rc for rc in db_map.query(db_map.wide_relationship_class_sq)])
+        self.assertFalse(list(db_map.query(db_map.wide_relationship_class_sq)))
         db_map.connection.close()
 
     def test_import_relationship_class_name_twice(self):
@@ -216,7 +216,7 @@ class TestImportRelationshipClass(unittest.TestCase):
         import_object_classes(db_map, ["object_class1"])
         _, errors = import_relationship_classes(db_map, [["new_rc", ["object_class", None]]])
         self.assertTrue(errors)
-        self.assertFalse([rc for rc in db_map.query(db_map.wide_relationship_class_sq)])
+        self.assertFalse(list(db_map.query(db_map.wide_relationship_class_sq)))
         db_map.connection.close()
 
 
@@ -1073,9 +1073,11 @@ class TestImportScenarioAlternative(unittest.TestCase):
             .filter(self._db_map.scenario_alternative_sq.c.scenario_id == self._db_map.scenario_sq.c.id)
             .filter(self._db_map.scenario_alternative_sq.c.alternative_id == self._db_map.alternative_sq.c.id)
         )
-        scenario_alternatives = dict()
+        scenario_alternatives = {}
         for scenario_alternative in scenario_alternative_qry:
-            alternative_rank = scenario_alternatives.setdefault(scenario_alternative.scenario_name, dict())
+            alternative_rank = scenario_alternatives.setdefault(
+                scenario_alternative.scenario_name, {}
+            )
             alternative_rank[scenario_alternative.alternative_name] = scenario_alternative.rank
         return scenario_alternatives
 

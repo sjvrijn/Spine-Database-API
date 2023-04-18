@@ -87,7 +87,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"feature"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         feature_ids = {x.parameter_definition_id: x.id for x in cache.get("feature", {}).values()}
         parameter_definitions = {
             x.id: {
@@ -125,7 +125,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"tool"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         tool_ids = {x.name: x.id for x in cache.get("tool", {}).values()}
         for item in items:
             try:
@@ -155,12 +155,12 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"tool_feature"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         tool_feature_ids = {(x.tool_id, x.feature_id): x.id for x in cache.get("tool_feature", {}).values()}
         tools = {x.id: x._asdict() for x in cache.get("tool", {}).values()}
         features = {
             x.id: {
-                "name": x.entity_class_name + "/" + x.parameter_definition_name,
+                "name": f"{x.entity_class_name}/{x.parameter_definition_name}",
                 "parameter_value_list_id": x.parameter_value_list_id,
             }
             for x in cache.get("feature", {}).values()
@@ -198,7 +198,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"tool_feature_method"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         tool_feature_method_ids = {
             (x.tool_feature_id, x.method_index): x.id for x in cache.get("tool_feature_method", {}).values()
         }
@@ -240,7 +240,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"alternative"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         alternative_ids = {x.name: x.id for x in cache.get("alternative", {}).values()}
         for item in items:
             try:
@@ -270,7 +270,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"scenario"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         scenario_ids = {x.name: x.id for x in cache.get("scenario", {}).values()}
         for item in items:
             try:
@@ -300,7 +300,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"scenario_alternative"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         ids_by_alt_id = {}
         ids_by_rank = {}
         for item in cache.get("scenario_alternative", {}).values():
@@ -341,7 +341,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"object_class"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         object_class_ids = {x.name: x.id for x in cache.get("object_class", {}).values()}
         for item in items:
             try:
@@ -370,7 +370,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"object"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         object_ids = {(x.class_id, x.name): x.id for x in cache.get("object", {}).values()}
         object_class_ids = [x.id for x in cache.get("object_class", {}).values()]
         for item in items:
@@ -401,7 +401,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"relationship_class"}, include_ancestors=True)
         intgr_error_log = []
-        checked_wide_items = list()
+        checked_wide_items = []
         relationship_class_ids = {x.name: x.id for x in cache.get("relationship_class", {}).values()}
         object_class_ids = [x.id for x in cache.get("object_class", {}).values()]
         for wide_item in wide_items:
@@ -439,7 +439,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"relationship"}, include_ancestors=True)
         intgr_error_log = []
-        checked_wide_items = list()
+        checked_wide_items = []
         relationship_ids_by_name = {(x.class_id, x.name): x.id for x in cache.get("relationship", {}).values()}
         relationship_ids_by_obj_lst = {
             (x.class_id, x.object_id_list): x.id for x in cache.get("relationship", {}).values()
@@ -491,12 +491,12 @@ class DatabaseMappingCheckMixin:
         """
         if cache is None:
             cache = self.make_cache({"entity_group"}, include_ancestors=True)
-        intgr_error_log = list()
-        checked_items = list()
+        intgr_error_log = []
+        checked_items = []
         current_ids = {(x.group_id, x.member_id): x.id for x in cache.get("entity_group", {}).values()}
         entities = {}
         for entity in chain(cache.get("object", {}).values(), cache.get("relationship", {}).values()):
-            entities.setdefault(entity.class_id, dict())[entity.id] = entity._asdict()
+            entities.setdefault(entity.class_id, {})[entity.id] = entity._asdict()
         for item in items:
             try:
                 with self._manage_stocks(
@@ -528,7 +528,7 @@ class DatabaseMappingCheckMixin:
             value.parameter_id for value in cache.get("parameter_value", {}).values()
         }
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         parameter_definition_ids = {
             (x.entity_class_id, x.parameter_name): x.id for x in cache.get("parameter_definition", {}).values()
         }
@@ -597,7 +597,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"parameter_value"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         parameter_value_ids = {
             (x.entity_id, x.parameter_id, x.alternative_id): x.id for x in cache.get("parameter_value", {}).values()
         }
@@ -615,7 +615,7 @@ class DatabaseMappingCheckMixin:
         }
         parameter_value_lists = {x.id: x.value_id_list for x in cache.get("parameter_value_list", {}).values()}
         list_values = {x.id: from_database(x.value, x.type) for x in cache.get("list_value", {}).values()}
-        alternatives = set(a.id for a in cache.get("alternative", {}).values())
+        alternatives = {a.id for a in cache.get("alternative", {}).values()}
         for item in items:
             entity_id = item.get("object_id") or item.get("relationship_id")
             if entity_id is not None:
@@ -660,7 +660,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"parameter_value_list"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         parameter_value_list_ids = {x.name: x.id for x in cache.get("parameter_value_list", {}).values()}
         for item in items:
             try:
@@ -695,7 +695,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"list_value"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         list_value_ids_by_index = {
             (x.parameter_value_list_id, x.index): x.id for x in cache.get("list_value", {}).values()
         }
@@ -740,7 +740,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"metadata"})
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         metadata = {(x.name, x.value): x.id for x in cache.get("metadata", {}).values()}
         for item in items:
             try:
@@ -772,7 +772,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"entity_metadata"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         entities = {x.id for x in cache.get("object", {}).values()}
         entities |= {x.id for x in cache.get("relationship", {}).values()}
         metadata = {x.id for x in cache.get("metadata", {}).values()}
@@ -803,7 +803,7 @@ class DatabaseMappingCheckMixin:
         if cache is None:
             cache = self.make_cache({"parameter_value_metadata"}, include_ancestors=True)
         intgr_error_log = []
-        checked_items = list()
+        checked_items = []
         values = {x.id for x in cache.get("parameter_value", {}).values()}
         metadata = {x.id for x in cache.get("metadata", {}).values()}
         for item in items:
@@ -872,9 +872,7 @@ def _get_key_values(item, pk):
 
 def _get_key(item, pk):
     key = tuple(_get_key_values(item, pk))
-    if len(key) > 1:
-        return key
-    return key[0]
+    return key if len(key) > 1 else key[0]
 
 
 def _fix_immutable_fields(item_type, current_item, item):

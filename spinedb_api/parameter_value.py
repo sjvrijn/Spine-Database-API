@@ -116,9 +116,7 @@ def relativedelta_to_duration(delta):
         months = delta.months
         months += 12 * delta.years
         return f"{months}M"
-    if delta.years > 0:
-        return f"{delta.years}Y"
-    return "0h"
+    return f"{delta.years}Y" if delta.years > 0 else "0h"
 
 
 def load_db_value(db_value, value_type=None):
@@ -139,9 +137,7 @@ def load_db_value(db_value, value_type=None):
         parsed = json.loads(db_value)
     except JSONDecodeError as err:
         raise ParameterValueFormatError(f"Could not decode the value: {err}") from err
-    if isinstance(parsed, dict):
-        return {"type": value_type, **parsed}
-    return parsed
+    return {"type": value_type, **parsed} if isinstance(parsed, dict) else parsed
 
 
 def dump_db_value(parsed_value):
@@ -179,9 +175,7 @@ def from_database(database_value, value_type=None):
         return from_dict(parsed)
     if isinstance(parsed, bool):
         return parsed
-    if isinstance(parsed, Number):
-        return float(parsed)
-    return parsed
+    return float(parsed) if isinstance(parsed, Number) else parsed
 
 
 def from_database_to_single_value(database_value, value_type):
@@ -308,9 +302,11 @@ def merge(value, other):
 
 
 def merge_parsed(parsed_value, parsed_other):
-    if not hasattr(parsed_value, "merge"):
-        return parsed_value
-    return parsed_value.merge(parsed_other)
+    return (
+        parsed_value.merge(parsed_other)
+        if hasattr(parsed_value, "merge")
+        else parsed_value
+    )
 
 
 def _break_dictionary(data):
@@ -399,7 +395,7 @@ def _time_series_from_dictionary(value_dict):
         TimeSeriesVariableResolution: restored time series
     """
     data = value_dict["data"]
-    stamps = list()
+    stamps = []
     values = np.empty(len(data))
     for index, (stamp, series_value) in enumerate(data.items()):
         try:
@@ -448,7 +444,7 @@ def _time_series_from_single_column(value_dict):
     if isinstance(resolution, str) or not isinstance(resolution, Sequence):
         # Always work with lists to simplify the code.
         resolution = [resolution]
-    relativedeltas = list()
+    relativedeltas = []
     for duration in resolution:
         if not isinstance(duration, str):
             duration = str(duration) + _TIME_SERIES_PLAIN_INDEX_UNIT
@@ -473,7 +469,7 @@ def _time_series_from_two_columns(value_dict):
         TimeSeriesVariableResolution: restored time series
     """
     data = value_dict["data"]
-    stamps = list()
+    stamps = []
     values = np.empty(len(data))
     for index, element in enumerate(data):
         if not isinstance(element, Sequence) or len(element) != 2:
@@ -519,11 +515,11 @@ def _map_from_database(value_dict):
         values = _map_values_from_database(data.values())
     elif isinstance(data, Sequence):
         if not data:
-            indexes = list()
-            values = list()
+            indexes = []
+            values = []
         else:
-            indexes_in_db = list()
-            values_in_db = list()
+            indexes_in_db = []
+            values_in_db = []
             for row in data:
                 if not isinstance(row, Sequence) or len(row) != 2:
                     raise ParameterValueFormatError('"data" is not a nested two column array.')
@@ -586,8 +582,8 @@ def _map_value_to_database(value):
 def _map_values_from_database(values_in_db):
     """Converts map's values from their database format."""
     if not values_in_db:
-        return list()
-    values = list()
+        return []
+    values = []
     for value_in_db in values_in_db:
         value = from_dict(value_in_db) if isinstance(value_in_db, dict) else value_in_db
         if isinstance(value, int):
@@ -660,14 +656,18 @@ class DateTime:
 
     def __eq__(self, other):
         """Returns True if other is equal to this object."""
-        if not isinstance(other, DateTime):
-            return NotImplemented
-        return self._value == other._value
+        return (
+            self._value == other._value
+            if isinstance(other, DateTime)
+            else NotImplemented
+        )
 
     def __lt__(self, other):
-        if not isinstance(other, DateTime):
-            return NotImplemented
-        return self._value < other._value
+        return (
+            self._value < other._value
+            if isinstance(other, DateTime)
+            else NotImplemented
+        )
 
     def __hash__(self):
         return hash(self._value)
@@ -723,9 +723,11 @@ class Duration:
 
     def __eq__(self, other):
         """Returns True if other is equal to this object."""
-        if not isinstance(other, Duration):
-            return NotImplemented
-        return self._value == other._value
+        return (
+            self._value == other._value
+            if isinstance(other, Duration)
+            else NotImplemented
+        )
 
     def __hash__(self):
         return hash(self._value)
@@ -851,9 +853,7 @@ class IndexedValue:
     def get_value(self, index):
         """Returns the value at the given index."""
         pos = self.indexes.position_lookup.get(index)
-        if pos is None:
-            return None
-        return self.values[pos]
+        return None if pos is None else self.values[pos]
 
     def set_value(self, index, value):
         """Sets the value at the given index."""
@@ -914,9 +914,12 @@ class Array(IndexedValue):
         self._value_type = value_type
 
     def __eq__(self, other):
-        if not isinstance(other, Array):
-            return NotImplemented
-        return np.array_equal(self._values, other._values) and self.index_name == other.index_name
+        return (
+            np.array_equal(self._values, other._values)
+            and self.index_name == other.index_name
+            if isinstance(other, Array)
+            else NotImplemented
+        )
 
     @staticmethod
     def type_():
@@ -966,7 +969,7 @@ class IndexedNumberArray(IndexedValue):
     @IndexedValue.values.setter
     def values(self, values):
         """Sets the values."""
-        if not isinstance(values, np.ndarray) or not values.dtype == np.dtype(float):
+        if not isinstance(values, np.ndarray) or values.dtype != np.dtype(float):
             values = np.array(values, dtype=float)
         self._values = values
 
@@ -1054,7 +1057,7 @@ def _check_time_pattern_index(union_str):
                 raise ParameterValueFormatError(
                     f"Invalid interval {interval_str}, it should start with either Y, M, D, WD, h, m, or s."
                 )
-            key = m.group(0)
+            key = m[0]
             lower_upper_str = interval_str[len(key) :]
             lower_upper = lower_upper_str.split(range_dlm)
             if len(lower_upper) != 2:
@@ -1114,12 +1117,14 @@ class TimePattern(IndexedNumberArray):
 
     def __eq__(self, other):
         """Returns True if other is equal to this object."""
-        if not isinstance(other, TimePattern):
-            return NotImplemented
         return (
-            self._indexes == other._indexes
-            and np.all(self._values == other._values)
-            and self.index_name == other.index_name
+            (
+                self._indexes == other._indexes
+                and np.all(self._values == other._values)
+                and self.index_name == other.index_name
+            )
+            if isinstance(other, TimePattern)
+            else NotImplemented
         )
 
     @IndexedNumberArray.indexes.setter
@@ -1167,15 +1172,17 @@ class TimeSeriesFixedResolution(TimeSeries):
 
     def __eq__(self, other):
         """Returns True if other is equal to this object."""
-        if not isinstance(other, TimeSeriesFixedResolution):
-            return NotImplemented
         return (
-            self._start == other._start
-            and self._resolution == other._resolution
-            and np.array_equal(self._values, other._values, equal_nan=True)
-            and self._ignore_year == other._ignore_year
-            and self._repeat == other._repeat
-            and self.index_name == other.index_name
+            (
+                self._start == other._start
+                and self._resolution == other._resolution
+                and np.array_equal(self._values, other._values, equal_nan=True)
+                and self._ignore_year == other._ignore_year
+                and self._repeat == other._repeat
+                and self.index_name == other.index_name
+            )
+            if isinstance(other, TimeSeriesFixedResolution)
+            else NotImplemented
         )
 
     @property
@@ -1306,25 +1313,31 @@ class TimeSeriesVariableResolution(TimeSeries):
 
     def __eq__(self, other):
         """Returns True if other is equal to this object."""
-        if not isinstance(other, TimeSeriesVariableResolution):
-            return NotImplemented
         return (
-            np.array_equal(self._indexes, other._indexes)
-            and np.array_equal(self._values, other._values, equal_nan=True)
-            and self._ignore_year == other._ignore_year
-            and self._repeat == other._repeat
-            and self.index_name == other.index_name
+            (
+                np.array_equal(self._indexes, other._indexes)
+                and np.array_equal(self._values, other._values, equal_nan=True)
+                and self._ignore_year == other._ignore_year
+                and self._repeat == other._repeat
+                and self.index_name == other.index_name
+            )
+            if isinstance(other, TimeSeriesVariableResolution)
+            else NotImplemented
         )
 
     def to_dict(self):
         """Returns the value in its database representation"""
-        value_dict = dict()
-        value_dict["data"] = {str(index): float(value) for index, value in zip(self._indexes, self._values)}
+        value_dict = {
+            "data": {
+                str(index): float(value)
+                for index, value in zip(self._indexes, self._values)
+            }
+        }
         # Add "index" entry only if its contents are not set to their default values.
         if self._ignore_year:
-            value_dict.setdefault("index", dict())["ignore_year"] = self._ignore_year
+            value_dict.setdefault("index", {})["ignore_year"] = self._ignore_year
         if self._repeat:
-            value_dict.setdefault("index", dict())["repeat"] = self._repeat
+            value_dict.setdefault("index", {})["repeat"] = self._repeat
         if self.index_name != "t":
             value_dict["index_name"] = self.index_name
         return value_dict
@@ -1356,9 +1369,13 @@ class Map(IndexedValue):
         self._values = values
 
     def __eq__(self, other):
-        if not isinstance(other, Map):
-            return NotImplemented
-        return other._indexes == self._indexes and other._values == self._values and self.index_name == other.index_name
+        return (
+            other._indexes == self._indexes
+            and other._values == self._values
+            and self.index_name == other.index_name
+            if isinstance(other, Map)
+            else NotImplemented
+        )
 
     def is_nested(self):
         """Returns True if any of the values is also a map."""
@@ -1366,7 +1383,7 @@ class Map(IndexedValue):
 
     def value_to_database_data(self):
         """Returns map's database representation's 'data' dictionary."""
-        data = list()
+        data = []
         for index, value in zip(self._indexes, self._values):
             index_in_db = _map_index_to_database(index)
             value_in_db = _map_value_to_database(value)
@@ -1423,7 +1440,7 @@ def convert_leaf_maps_to_specialized_containers(map_):
     converted_container = _try_convert_to_container(map_)
     if converted_container is not None:
         return converted_container
-    new_values = list()
+    new_values = []
     for _, value in zip(map_.indexes, map_.values):
         if isinstance(value, Map):
             converted = convert_leaf_maps_to_specialized_containers(value)
@@ -1448,7 +1465,7 @@ def convert_containers_to_maps(value):
     if isinstance(value, Map):
         if not value:
             return value
-        new_values = list()
+        new_values = []
         for _, x in zip(value.indexes, value.values):
             if isinstance(x, IndexedValue):
                 new_values.append(convert_containers_to_maps(x))
@@ -1478,8 +1495,8 @@ def convert_map_to_table(map_, make_square=True, row_this_far=None, empty=None):
         list of list: map's rows
     """
     if row_this_far is None:
-        row_this_far = list()
-    rows = list()
+        row_this_far = []
+    rows = []
     for index, value in zip(map_.indexes, map_.values):
         if not isinstance(value, Map):
             rows.append(row_this_far + [index, value])
@@ -1489,11 +1506,7 @@ def convert_map_to_table(map_, make_square=True, row_this_far=None, empty=None):
         max_length = 0
         for row in rows:
             max_length = max(max_length, len(row))
-        equal_length_rows = list()
-        for row in rows:
-            equal_length_row = row + (max_length - len(row)) * [empty]
-            equal_length_rows.append(equal_length_row)
-        return equal_length_rows
+        return [row + (max_length - len(row)) * [empty] for row in rows]
     return rows
 
 
@@ -1507,7 +1520,7 @@ def convert_map_to_dict(map_):
     Returns:
         dict: Map as a dict
     """
-    d = dict()
+    d = {}
     for index, x in zip(map_.indexes, map_.values):
         if isinstance(x, Map):
             x = convert_map_to_dict(x)
@@ -1527,8 +1540,8 @@ def _try_convert_to_container(map_):
     """
     if not map_:
         return None
-    stamps = list()
-    values = list()
+    stamps = []
+    values = []
     for index, value in zip(map_.indexes, map_.values):
         if not isinstance(index, DateTime) or not isinstance(value, float):
             return None

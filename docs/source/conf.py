@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath(root_path))
 
 project = "Spine Database API"
 author = 'Spine project consortium'
-copyright = '2017-2021 {}'.format(author)
+copyright = f'2017-2021 {author}'
 
 # The short X.Y version
 from spinedb_api import __version__ as spinedb_api_version

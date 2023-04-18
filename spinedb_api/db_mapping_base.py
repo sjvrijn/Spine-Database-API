@@ -457,7 +457,7 @@ class DatabaseMappingBase:
         if not self.sa_url.drivername.startswith("sqlite"):
             return column.in_(values)
         in_value = Table(
-            "in_value_" + str(uuid.uuid4()),
+            f"in_value_{str(uuid.uuid4())}",
             MetaData(),
             Column("value", column.type, primary_key=True),
             prefixes=['TEMPORARY'],
@@ -501,7 +501,11 @@ class DatabaseMappingBase:
         for tablename in tablenames:
             if self.cache.pop(tablename, None):
                 self._do_advance_cache_query(tablename)
-        attr_names = set(attr for tablename in tablenames for attr in self._get_table_to_sq_attr().get(tablename, []))
+        attr_names = {
+            attr
+            for tablename in tablenames
+            for attr in self._get_table_to_sq_attr().get(tablename, [])
+        }
         for attr_name in attr_names:
             setattr(self, attr_name, None)
 

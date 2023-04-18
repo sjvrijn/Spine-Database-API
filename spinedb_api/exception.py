@@ -45,7 +45,7 @@ class SpineDBVersionError(SpineDBAPIError):
     """Database version error."""
 
     def __init__(self, url=None, current=None, expected=None, upgrade_available=True):
-        super().__init__(msg="The database at '{}' is not the expected version.".format(url))
+        super().__init__(msg=f"The database at '{url}' is not the expected version.")
         self.url = url
         self.current = current
         self.expected = expected
@@ -56,7 +56,9 @@ class SpineTableNotFoundError(SpineDBAPIError):
     """Can't find one of the tables."""
 
     def __init__(self, table, url=None):
-        super().__init__(msg="Table(s) '{}' couldn't be mapped from the database at '{}'.".format(table, url))
+        super().__init__(
+            msg=f"Table(s) '{table}' couldn't be mapped from the database at '{url}'."
+        )
         self.table = table
 
 
@@ -64,7 +66,7 @@ class RecordNotFoundError(SpineDBAPIError):
     """Can't find one record in one of the tables."""
 
     def __init__(self, table, name=None, id=None):
-        super().__init__(msg="Unable to find item in table '{}'.".format(table))
+        super().__init__(msg=f"Unable to find item in table '{table}'.")
         self.table = table
         self.name = name
         self.id = id
@@ -74,7 +76,9 @@ class ParameterValueError(SpineDBAPIError):
     """The value given for a parameter does not fit the datatype."""
 
     def __init__(self, value, data_type):
-        super().__init__(msg="The value {} does not fit the datatype '{}'.".format(value, data_type))
+        super().__init__(
+            msg=f"The value {value} does not fit the datatype '{data_type}'."
+        )
         self.value = value
         self.data_type = data_type
 

@@ -85,9 +85,7 @@ class SourceConnection:
         options_max_rows = options.get("max_rows", -1)
         if options_max_rows == -1:
             return max_rows
-        if max_rows == -1:
-            return options_max_rows
-        return min(max_rows, options_max_rows)
+        return options_max_rows if max_rows == -1 else min(max_rows, options_max_rows)
 
     def get_data(self, table, options, max_rows=-1, start=0):
         """

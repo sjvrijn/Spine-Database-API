@@ -134,7 +134,10 @@ class ExcelConnector(SourceConnection):
             header = []
             rows = chain((first_row,), rows)
         # iterator for selected columns and skipped rows
-        data_iterator = (list(cell.value for cell in islice(row, skip_columns, read_to_col)) for row in rows)
+        data_iterator = (
+            [cell.value for cell in islice(row, skip_columns, read_to_col)]
+            for row in rows
+        )
         if stop_at_empty_row:
             # add condition to iterator
             data_iterator = takewhile(any, data_iterator)
@@ -180,9 +183,11 @@ def create_mapping_from_sheet(ws):
         if index_dim_count is not None:
             index_dim_count = int(index_dim_count)
         header = _get_header(ws, header_row, index_dim_count)
-        if not header:
-            return None, None
-        return _create_entity_mappings(metadata, header, index_dim_count)
+        return (
+            _create_entity_mappings(metadata, header, index_dim_count)
+            if header
+            else (None, None)
+        )
     options = {"header": True, "row": len(metadata) + 1, "read_until_col": True, "read_until_row": True}
     if metadata["sheet_type"] == "object_group":
         map_dict = {"map_type": "ObjectGroup", "name": metadata["class_name"], "groups": 0, "members": 1}
@@ -248,8 +253,8 @@ def _create_entity_mappings(metadata, header, index_dim_count):
         map_dict["map_type"] = "ObjectClass"
         map_dict["objects"] = {"map_type": ent_alt_map_type, "reference": 0}
     elif entity_type == "relationship":
-        entity_dim_count = int(metadata["entity_dim_count"])
         map_dict["map_type"] = "RelationshipClass"
+        entity_dim_count = int(metadata["entity_dim_count"])
         map_dict["object_classes"] = header[:entity_dim_count]
         map_dict["objects"] = [{"map_type": ent_alt_map_type, "reference": i} for i in range(entity_dim_count)]
     else:

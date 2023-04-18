@@ -64,7 +64,7 @@ class DiffDatabaseMappingBase(DatabaseMappingBase):
 
     def _create_diff_tables(self):
         """Create diff tables."""
-        diff_name_prefix = "diff_" + self.username
+        diff_name_prefix = f"diff_{self.username}"
         self.diff_prefix = diff_name_prefix + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "_"
         for tablename in self._tablenames:
             table = self._metadata.tables[tablename]

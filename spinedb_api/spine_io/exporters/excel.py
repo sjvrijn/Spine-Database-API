@@ -157,7 +157,7 @@ def _make_indexed_parameter_value_mapping(alt_pos=-2, filter_re="array|time_patt
 
 def _make_object_mapping(object_class_name, pivoted=False):
     root_mapping = ObjectClassMapping(Position.table_name, filter_re=f"^{object_class_name}$")
-    pos = 0 if not pivoted else -1
+    pos = -1 if pivoted else 0
     root_mapping.child = ObjectMapping(pos, header=object_class_name)
     return root_mapping
 

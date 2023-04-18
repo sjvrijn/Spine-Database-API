@@ -118,8 +118,11 @@ def _alternative_mapping_from_dict(map_dict):
     name = map_dict.get("name")
     skip_columns = map_dict.get("skip_columns", [])
     read_start_row = map_dict.get("read_start_row", 0)
-    root_mapping = AlternativeMapping(*_pos_and_val(name), skip_columns=skip_columns, read_start_row=read_start_row)
-    return root_mapping
+    return AlternativeMapping(
+        *_pos_and_val(name),
+        skip_columns=skip_columns,
+        read_start_row=read_start_row
+    )
 
 
 def _scenario_mapping_from_dict(map_dict):
@@ -150,8 +153,11 @@ def _tool_mapping_from_dict(map_dict):
     name = map_dict.get("name")
     skip_columns = map_dict.get("skip_columns", [])
     read_start_row = map_dict.get("read_start_row", 0)
-    root_mapping = ToolMapping(*_pos_and_val(name), skip_columns=skip_columns, read_start_row=read_start_row)
-    return root_mapping
+    return ToolMapping(
+        *_pos_and_val(name),
+        skip_columns=skip_columns,
+        read_start_row=read_start_row
+    )
 
 
 def _feature_mapping_from_dict(map_dict):

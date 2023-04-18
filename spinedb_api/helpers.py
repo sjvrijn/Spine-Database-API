@@ -293,11 +293,11 @@ def is_empty(db_url):
     try:
         engine = create_engine(db_url)
     except DatabaseError as e:
-        raise SpineDBAPIError("Could not connect to '{}': {}".format(db_url, e.orig.args)) from None
+        raise SpineDBAPIError(
+            f"Could not connect to '{db_url}': {e.orig.args}"
+        ) from None
     insp = inspect(engine)
-    if insp.get_table_names():
-        return False
-    return True
+    return not insp.get_table_names()
 
 
 def create_spine_metadata():
@@ -687,7 +687,9 @@ def create_new_spine_database(db_url):
     try:
         engine = create_engine(db_url)
     except DatabaseError as e:
-        raise SpineDBAPIError("Could not connect to '{}': {}".format(db_url, e.orig.args)) from None
+        raise SpineDBAPIError(
+            f"Could not connect to '{db_url}': {e.orig.args}"
+        ) from None
     # Drop existing tables. This is a Spine db now...
     meta = MetaData(engine)
     meta.reflect()
@@ -702,7 +704,7 @@ def create_new_spine_database(db_url):
         engine.execute("INSERT INTO entity_type VALUES (1, 'object', 1), (2, 'relationship', 1)")
         engine.execute("INSERT INTO alembic_version VALUES ('989fccf80441')")
     except DatabaseError as e:
-        raise SpineDBAPIError("Unable to create Spine database: {}".format(e)) from None
+        raise SpineDBAPIError(f"Unable to create Spine database: {e}") from None
     return engine
 
 
@@ -713,7 +715,9 @@ def _create_first_spine_database(db_url):
     try:
         engine = create_engine(db_url)
     except DatabaseError as e:
-        raise SpineDBAPIError("Could not connect to '{}': {}".format(db_url, e.orig.args)) from None
+        raise SpineDBAPIError(
+            f"Could not connect to '{db_url}': {e.orig.args}"
+        ) from None
     # Drop existing tables. This is a Spine db now...
     meta = MetaData(engine)
     meta.reflect()
@@ -855,7 +859,7 @@ def _create_first_spine_database(db_url):
     try:
         meta.create_all(engine)
     except DatabaseError as e:
-        raise SpineDBAPIError("Unable to create Spine database: {}".format(e.orig.args))
+        raise SpineDBAPIError(f"Unable to create Spine database: {e.orig.args}")
     return engine
 
 

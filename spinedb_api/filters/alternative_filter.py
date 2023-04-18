@@ -72,7 +72,7 @@ def alternative_filter_config_to_shorthand(config):
     """
     shorthand = ""
     for alternative in config["alternatives"]:
-        shorthand = shorthand + f":'{alternative}'"
+        shorthand = f"{shorthand}:'{alternative}'"
     return ALTERNATIVE_FILTER_SHORTHAND_TAG + shorthand
 
 
@@ -86,7 +86,7 @@ def alternative_names_from_dict(config):
     Returns:
         list: list of alternative names or None if ``config`` is not a valid alternative filter configuration
     """
-    if not config["type"] == ALTERNATIVE_FILTER_TYPE:
+    if config["type"] != ALTERNATIVE_FILTER_TYPE:
         return None
     return config["alternatives"]
 

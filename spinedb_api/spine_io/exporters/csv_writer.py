@@ -56,7 +56,7 @@ class CsvWriter(Writer):
         if table_name is None:
             table_name = self._default_table_name
         else:
-            table_name = table_name + ".csv"
+            table_name = f"{table_name}.csv"
         self._file_name = os.path.join(self._path, table_name)
         if self._file_name not in self._finished_files and os.path.exists(self._file_name):
             os.remove(self._file_name)

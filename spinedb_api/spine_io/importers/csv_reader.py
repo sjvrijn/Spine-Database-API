@@ -66,7 +66,6 @@ class CSVConnector(SourceConnection):
         Returns:
             dict
         """
-        options = {}
         # try to find options for file
         with open(self._filename, "rb") as input_file:
             sniff_result = chardet.detect(input_file.read(1024))
@@ -80,7 +79,7 @@ class CSVConnector(SourceConnection):
             ]
         else:
             try_encodings = self._ENCODINGS
-        options["encoding"] = try_encodings[0]
+        options = {"encoding": try_encodings[0]}
         for encoding in try_encodings:
             with open(self._filename, encoding=encoding) as csvfile:
                 try:
@@ -91,7 +90,7 @@ class CSVConnector(SourceConnection):
                         options["delimiter"] = "Tab"
                     else:
                         options["delimiter_custom"] = dialect.delimiter
-                    options.update({"quotechar": dialect.quotechar, "skip": 0})
+                    options |= {"quotechar": dialect.quotechar, "skip": 0}
                 except csv.Error:
                     pass
                 except UnicodeDecodeError:
@@ -130,9 +129,8 @@ class CSVConnector(SourceConnection):
         elif delimiter == "Tab":
             delimiter = "\t"
         dialect = {"delimiter": delimiter}
-        quotechar = options.get("quotechar", None)
-        if quotechar:
-            dialect.update({"quotechar": quotechar})
+        if quotechar := options.get("quotechar", None):
+            dialect["quotechar"] = quotechar
         has_header = options.get("has_header", False)
         skip = options.get("skip", 0)
         return encoding, dialect, has_header, skip
@@ -156,8 +154,7 @@ class CSVConnector(SourceConnection):
             max_rows += skip
         with open(self._filename, encoding=encoding) as text_file:
             csv_reader = csv.reader(text_file, **dialect)
-            csv_reader = islice(csv_reader, skip, max_rows)
-            yield from csv_reader
+            yield from islice(csv_reader, skip, max_rows)
 
     def get_data_iterator(self, table, options, max_rows=-1):
         """Creates an iterator for the file in self.filename
@@ -177,8 +174,7 @@ class CSVConnector(SourceConnection):
             first_row = next(csv_iter)
         except StopIteration:
             return iter([]), []
-        has_header = options.get("has_header", False)
-        if has_header:
+        if has_header := options.get("has_header", False):
             # Very good, we already have the first row
             header = first_row
         else:

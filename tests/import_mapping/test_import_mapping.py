@@ -1690,12 +1690,13 @@ class TestMappingIntegration(unittest.TestCase):
             "before_alternative_name": 2,
         }
         out, errors = get_mapped_data(data, [mapping], data_header)
-        expected = dict()
-        expected["scenario_alternatives"] = [
-            ["scenario_A", "alternative1", "second_alternative"],
-            ["scenario_A", "second_alternative", "last_one"],
-            ["scenario_B", "last_one", ""],
-        ]
+        expected = {
+            "scenario_alternatives": [
+                ["scenario_A", "alternative1", "second_alternative"],
+                ["scenario_A", "second_alternative", "last_one"],
+                ["scenario_B", "last_one", ""],
+            ]
+        }
         self.assertFalse(errors)
         self.assertEqual(out, expected)
 
@@ -1704,12 +1705,13 @@ class TestMappingIntegration(unittest.TestCase):
         data = iter(input_data)
         mappings = [{"map_type": "Scenario", "position": -1}, {"map_type": "ScenarioAlternative", "position": "hidden"}]
         out, errors = get_mapped_data(data, [mappings])
-        expected = dict()
-        expected["scenario_alternatives"] = [
-            ["scenario_A", "first_alternative"],
-            ["scenario_A", "second_alternative"],
-            ["scenario_B", "Base"],
-        ]
+        expected = {
+            "scenario_alternatives": [
+                ["scenario_A", "first_alternative"],
+                ["scenario_A", "second_alternative"],
+                ["scenario_B", "Base"],
+            ]
+        }
         self.assertFalse(errors)
         self.assertEqual(out, expected)
 
@@ -1779,11 +1781,12 @@ class TestMappingIntegration(unittest.TestCase):
             "method": 3,
         }
         out, errors = get_mapped_data(data, [mapping], data_header)
-        expected = dict()
-        expected["tool_feature_methods"] = [
-            ["tool1", "class1", "param1", "meth1"],
-            ["tool2", "class2", "param2", "meth2"],
-        ]
+        expected = {
+            "tool_feature_methods": [
+                ["tool1", "class1", "param1", "meth1"],
+                ["tool2", "class2", "param2", "meth2"],
+            ]
+        }
         self.assertFalse(errors)
         self.assertEqual(out, expected)
 
@@ -1798,12 +1801,13 @@ class TestMappingIntegration(unittest.TestCase):
         data_header = next(data)
         mapping = {"map_type": "ObjectGroup", "name": 0, "groups": 1, "members": 2}
         out, errors = get_mapped_data(data, [mapping], data_header)
-        expected = dict()
-        expected["object_classes"] = {"class_A"}
-        expected["object_groups"] = {
-            ("class_A", "group1", "object1"),
-            ("class_A", "group1", "object2"),
-            ("class_A", "group2", "object3"),
+        expected = {
+            "object_classes": {"class_A"},
+            "object_groups": {
+                ("class_A", "group1", "object1"),
+                ("class_A", "group1", "object2"),
+                ("class_A", "group2", "object3"),
+            },
         }
         self.assertFalse(errors)
         self.assertEqual(out, expected)
@@ -1819,20 +1823,21 @@ class TestMappingIntegration(unittest.TestCase):
         data_header = next(data)
         mapping = {"map_type": "ObjectGroup", "name": 0, "groups": 1, "members": 2, "import_objects": True}
         out, errors = get_mapped_data(data, [mapping], data_header)
-        expected = dict()
-        expected["object_groups"] = {
-            ("class_A", "group1", "object1"),
-            ("class_A", "group1", "object2"),
-            ("class_A", "group2", "object3"),
-        }
-        expected["object_classes"] = {"class_A"}
-        expected["objects"] = {
-            ("class_A", "group1"),
-            ("class_A", "object1"),
-            ("class_A", "group1"),
-            ("class_A", "object2"),
-            ("class_A", "group2"),
-            ("class_A", "object3"),
+        expected = {
+            "object_groups": {
+                ("class_A", "group1", "object1"),
+                ("class_A", "group1", "object2"),
+                ("class_A", "group2", "object3"),
+            },
+            "object_classes": {"class_A"},
+            "objects": {
+                ("class_A", "group1"),
+                ("class_A", "object1"),
+                ("class_A", "group1"),
+                ("class_A", "object2"),
+                ("class_A", "group2"),
+                ("class_A", "object3"),
+            },
         }
         self.assertFalse(errors)
         self.assertEqual(out, expected)
@@ -1857,13 +1862,14 @@ class TestMappingIntegration(unittest.TestCase):
             },
         }
         out, errors = get_mapped_data(data, [mapping], data_header)
-        expected = dict()
-        expected["object_classes"] = {"class_A", "class_A", "class_B"}
-        expected["object_parameters"] = [
-            ("class_A", "param1", 23.0, "listA"),
-            ("class_A", "param2", 42.0, "listB"),
-            ("class_B", "param3", 5.0, "listA"),
-        ]
+        expected = {
+            "object_classes": {"class_A", "class_B"},
+            "object_parameters": [
+                ("class_A", "param1", 23.0, "listA"),
+                ("class_A", "param2", 42.0, "listB"),
+                ("class_B", "param3", 5.0, "listA"),
+            ],
+        }
         self.assertFalse(errors)
         self.assertEqual(out, expected)
 

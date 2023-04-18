@@ -90,9 +90,7 @@ class GroupConcat(GroupFunction):
     DISPLAY_NAME = "concatenate"
 
     def __call__(self, items):
-        if not items:
-            return ""
-        return ",".join([str(x) for x in items])
+        return ",".join([str(x) for x in items]) if items else ""
 
 
 class GroupOneOrNone(GroupFunction):
@@ -100,9 +98,7 @@ class GroupOneOrNone(GroupFunction):
     DISPLAY_NAME = "one or none"
 
     def __call__(self, items):
-        if not items or len(items) != 1:
-            return None
-        return items[0]
+        return None if not items or len(items) != 1 else items[0]
 
 
 class NoGroup(GroupFunction):
@@ -110,11 +106,7 @@ class NoGroup(GroupFunction):
     DISPLAY_NAME = "do not group"
 
     def __call__(self, items):
-        if items is None:
-            return None
-        # The items are always in a list, even if not grouping, because we want to use the same code
-        # for grouping and not grouping. If not grouping, the list will contain exactly one element.
-        return items[0]
+        return None if items is None else items[0]
 
 
 _classes = (NoGroup, GroupSum, GroupMean, GroupMin, GroupMax, GroupConcat, GroupOneOrNone)

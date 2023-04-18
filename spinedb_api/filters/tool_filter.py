@@ -72,9 +72,7 @@ def tool_name_from_dict(config):
     Returns:
         str: tool name or None if ``config`` is not a valid tool filter configuration
     """
-    if config["type"] != TOOL_FILTER_TYPE:
-        return None
-    return config["tool"]
+    return None if config["type"] != TOOL_FILTER_TYPE else config["tool"]
 
 
 def tool_filter_config_to_shorthand(config):
@@ -87,7 +85,7 @@ def tool_filter_config_to_shorthand(config):
     Returns:
         str: a shorthand string
     """
-    return TOOL_SHORTHAND_TAG + ":" + config["tool"]
+    return f"{TOOL_SHORTHAND_TAG}:" + config["tool"]
 
 
 def tool_filter_shorthand_to_config(shorthand):
@@ -121,7 +119,7 @@ class _ToolFilterState:
         """
         self.original_entity_sq = db_map.entity_sq
         tool_id = self._tool_id(db_map, tool)
-        table_name = "tool_filter_cache_" + uuid4().hex
+        table_name = f"tool_filter_cache_{uuid4().hex}"
         column = Column("entity_id", ForeignKey("entity.id"))
         self.table = db_map.make_temporary_table(table_name, column)
         statement = self.table.insert().from_select(["entity_id"], self.active_entity_id_sq(db_map, tool_id))

@@ -51,8 +51,7 @@ class DatabaseMappingRemoveMixin:
             delete = table.delete().where(self.in_(getattr(table.c, table_id), ids))
             try:
                 self.connection.execute(delete)
-                table_cache = self.cache.get(tablename)
-                if table_cache:
+                if table_cache := self.cache.get(tablename):
                     for id_ in ids:
                         table_cache.remove_item(id_)
             except DBAPIError as e:
@@ -282,10 +281,14 @@ class DatabaseMappingRemoveMixin:
 
     def _entity_metadata_cascading_ids(self, ids, cache):
         cascading_ids = {"entity_metadata": set(ids)}
-        cascading_ids.update(self._non_referenced_metadata_ids(ids, "entity_metadata", cache))
+        cascading_ids |= self._non_referenced_metadata_ids(
+            ids, "entity_metadata", cache
+        )
         return cascading_ids
 
     def _parameter_value_metadata_cascading_ids(self, ids, cache):
         cascading_ids = {"parameter_value_metadata": set(ids)}
-        cascading_ids.update(self._non_referenced_metadata_ids(ids, "parameter_value_metadata", cache))
+        cascading_ids |= self._non_referenced_metadata_ids(
+            ids, "parameter_value_metadata", cache
+        )
         return cascading_ids

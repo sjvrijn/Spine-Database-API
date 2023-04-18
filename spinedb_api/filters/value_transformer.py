@@ -82,14 +82,14 @@ def value_transformer_config_to_shorthand(config):
     for class_name, param_instructions in instructions.items():
         for param_name, instruction_list in param_instructions.items():
             for instruction in instruction_list:
-                shorthand = shorthand + ":" + class_name
-                shorthand = shorthand + ":" + param_name
+                shorthand = f"{shorthand}:{class_name}"
+                shorthand = f"{shorthand}:{param_name}"
                 operation = instruction["operation"]
-                shorthand = shorthand + ":" + operation
+                shorthand = f"{shorthand}:{operation}"
                 if operation == "multiply":
-                    shorthand = shorthand + ":" + str(instruction["rhs"])
+                    shorthand = f"{shorthand}:" + str(instruction["rhs"])
                 elif operation == "generate_index":
-                    shorthand = shorthand + ":" + instruction["expression"]
+                    shorthand = f"{shorthand}:" + instruction["expression"]
     return VALUE_TRANSFORMER_SHORTHAND_TAG + shorthand
 
 
@@ -104,7 +104,7 @@ def value_transformer_shorthand_to_config(shorthand):
         dict: value transformer configuration
     """
     tokens = shorthand.split(":")[1:]
-    instructions = dict()
+    instructions = {}
     while tokens:
         class_name = tokens.pop(0)
         param_name = tokens.pop(0)
@@ -140,7 +140,11 @@ class _ValueTransformerState:
             dict: mapping from parameter value ids to transformed values
         """
         class_names = set(instructions.keys())
-        param_names = set(name for class_instructions in instructions.values() for name in class_instructions)
+        param_names = {
+            name
+            for class_instructions in instructions.values()
+            for name in class_instructions
+        }
         definition_ids = {
             definition_row.id
             for definition_row in db_map.query(db_map.entity_parameter_definition_sq).filter(
@@ -148,7 +152,7 @@ class _ValueTransformerState:
                 & db_map.entity_parameter_definition_sq.c.parameter_name.in_(param_names)
             )
         }
-        transformed = dict()
+        transformed = {}
         for value_row in db_map.query(db_map.entity_parameter_value_sq).filter(
             db_map.entity_parameter_value_sq.c.parameter_id.in_(definition_ids)
         ):
@@ -202,7 +206,7 @@ def _make_parameter_value_transforming_sq(db_map, state):
     rel_entity_case = case(
         [(db_map.entity_sq.c.type_id == db_map.relationship_entity_type, subquery.c.entity_id)], else_=None
     )
-    parameter_value_sq = (
+    return (
         db_map.query(
             subquery.c.id.label("id"),
             subquery.c.parameter_definition_id,
@@ -220,10 +224,12 @@ def _make_parameter_value_transforming_sq(db_map, state):
         )
         .join(temp_sq, subquery.c.id == temp_sq.c.id, isouter=True)
         .join(db_map.entity_sq, db_map.entity_sq.c.id == subquery.c.entity_id)
-        .join(db_map.entity_class_sq, db_map.entity_class_sq.c.id == subquery.c.entity_class_id)
+        .join(
+            db_map.entity_class_sq,
+            db_map.entity_class_sq.c.id == subquery.c.entity_class_id,
+        )
         .subquery()
     )
-    return parameter_value_sq
 
 
 def _transform(value, instructions):

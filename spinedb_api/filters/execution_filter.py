@@ -72,9 +72,7 @@ def execution_descriptor_from_dict(config):
     Returns:
         dict: execution descriptor or None if ``config`` is not a valid execution filter configuration
     """
-    if config["type"] != EXECUTION_FILTER_TYPE:
-        return None
-    return config["execution"]
+    return None if config["type"] != EXECUTION_FILTER_TYPE else config["execution"]
 
 
 def execution_filter_config_to_shorthand(config):
@@ -87,7 +85,7 @@ def execution_filter_config_to_shorthand(config):
     Returns:
         str: a shorthand string
     """
-    return EXECUTION_SHORTHAND_TAG + ":" + json.dumps(config["execution"])
+    return f"{EXECUTION_SHORTHAND_TAG}:" + json.dumps(config["execution"])
 
 
 def execution_filter_shorthand_to_config(shorthand):

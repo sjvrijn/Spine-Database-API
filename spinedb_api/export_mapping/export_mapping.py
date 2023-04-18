@@ -42,7 +42,7 @@ def check_validity(root_mapping):
     Returns:
         list of str: a list of issue descriptions
     """
-    issues = list()
+    issues = []
     flattened = root_mapping.flatten()
     non_title_mappings = [m for m in flattened if m.position != Position.table_name]
     if len(non_title_mappings) == 2 and is_pivoted(non_title_mappings[0].position):
@@ -77,9 +77,11 @@ class ExportMapping(Mapping):
     def __eq__(self, other):
         if not isinstance(other, ExportMapping):
             return NotImplemented
-        if not super().__eq__(other):
-            return False
-        return self._ignorable == other._ignorable and self.header == other.header
+        return (
+            self._ignorable == other._ignorable and self.header == other.header
+            if super().__eq__(other)
+            else False
+        )
 
     def check_validity(self):
         """Checks if mapping is valid.
@@ -87,7 +89,7 @@ class ExportMapping(Mapping):
         Returns:
             list: a list of issues
         """
-        issues = list()
+        issues = []
         if self.child is None:
             is_effective_leaf = True
         else:
@@ -243,11 +245,16 @@ class ExportMapping(Mapping):
         for m in mappings:
             qry = m.filter_query_by_title(qry, title_state)
         # Apply standard title filters
-        if not title_state:
-            return qry
-        # Use a _FilteredQuery, since building a subquery to query it again leads to parser stack overflow
-        return _FilteredQuery(
-            qry, lambda db_row: all(getattr(db_row, key) == value for key, value in title_state.items())
+        return (
+            _FilteredQuery(
+                qry,
+                lambda db_row: all(
+                    getattr(db_row, key) == value
+                    for key, value in title_state.items()
+                ),
+            )
+            if title_state
+            else qry
         )
 
     def _build_title_query(self, db_map):
@@ -304,11 +311,16 @@ class ExportMapping(Mapping):
         for m in mappings:
             qry = m.filter_query_by_title(qry, title_state)
         # Apply standard title filters
-        if not title_state:
-            return qry
-        # Use a _FilteredQuery, since building a subquery to query it again leads to parser stack overflow
-        return _FilteredQuery(
-            qry, lambda db_row: all(getattr(db_row, key) == value for key, value in title_state.items())
+        return (
+            _FilteredQuery(
+                qry,
+                lambda db_row: all(
+                    getattr(db_row, key) == value
+                    for key, value in title_state.items()
+                ),
+            )
+            if title_state
+            else qry
         )
 
     @staticmethod
@@ -434,9 +446,7 @@ class ExportMapping(Mapping):
         """
         if self.position == Position.table_name:
             return True
-        if self.child is not None:
-            return self.child.has_titles()
-        return False
+        return self.child.has_titles() if self.child is not None else False
 
     def _title_state(self, db_row):
         """Returns the title state associated to this mapping from given database row.
@@ -451,9 +461,7 @@ class ExportMapping(Mapping):
             dict
         """
         id_field = self.id_field()
-        if id_field is None:
-            return {}
-        return {id_field: getattr(db_row, id_field)}
+        return {} if id_field is None else {id_field: getattr(db_row, id_field)}
 
     def _get_titles(self, db_row, limit=None):
         """Yields pairs (title, title state) issued by this mapping for given database row.
@@ -534,9 +542,7 @@ class ExportMapping(Mapping):
         """
         if self.header or self.position == Position.header:
             return True
-        if self.child is None:
-            return False
-        return self.child.has_header()
+        return False if self.child is None else self.child.has_header()
 
     def make_header_recursive(self, query, buddies):
         """Builds the header recursively.
@@ -551,9 +557,7 @@ class ExportMapping(Mapping):
             dict: a mapping from column index to string header
         """
         if self.child is None:
-            if not is_regular(self.position):
-                return {}
-            return {self.position: self.header}
+            return {self.position: self.header} if is_regular(self.position) else {}
         header = self.child.make_header_recursive(query, buddies)
         if self.position == Position.header:
             buddy = find_my_buddy(self, buddies)
@@ -760,9 +764,7 @@ class RelationshipClassMapping(ExportMapping):
         return "relationship_class_name"
 
     def query_parents(self, what):
-        if what != "dimension":
-            return super().query_parents(what)
-        return -1
+        return super().query_parents(what) if what != "dimension" else -1
 
     def _title_state(self, db_row):
         state = super()._title_state(db_row)
@@ -895,9 +897,7 @@ class RelationshipMapping(ExportMapping):
         return "relationship_id"
 
     def query_parents(self, what):
-        if what != "dimension":
-            return super().query_parents(what)
-        return -1
+        return super().query_parents(what) if what != "dimension" else -1
 
     def _title_state(self, db_row):
         state = super()._title_state(db_row)
@@ -1152,7 +1152,7 @@ class ExpandedParameterDefaultValueMapping(ExportMapping):
 
     def _data(self, db_row):
         value = self.parent.current_leaf
-        return value if not isinstance(value, IndexedValue) else value.VALUE_TYPE
+        return value.VALUE_TYPE if isinstance(value, IndexedValue) else value
 
 
 class ParameterValueMapping(ExportMapping):
@@ -1296,7 +1296,7 @@ class ExpandedParameterValueMapping(ExportMapping):
 
     def _data(self, db_row):
         value = self.parent.current_leaf
-        return value if not isinstance(value, IndexedValue) else value.VALUE_TYPE
+        return value.VALUE_TYPE if isinstance(value, IndexedValue) else value
 
 
 class ParameterValueListMapping(ExportMapping):
@@ -1813,7 +1813,7 @@ def pair_header_buddies(root_mapping):
         paired: bool
 
     pairables = [Pairable(m, False) for m in root_mapping.flatten()]
-    buddies = list()
+    buddies = []
     for i, parent in enumerate(pairables):
         if parent.mapping.position != Position.header:
             continue
@@ -1835,10 +1835,7 @@ def find_my_buddy(mapping, buddies):
     Returns:
         ExportMapping: buddy mapping or None if not found
     """
-    for parent, buddy in buddies:
-        if mapping is parent:
-            return buddy
-    return None
+    return next((buddy for parent, buddy in buddies if mapping is parent), None)
 
 
 def from_dict(serialized):
@@ -1897,7 +1894,7 @@ def from_dict(serialized):
     }
     # Legacy
     mappings["ParameterIndex"] = ParameterValueIndexMapping
-    flattened = list()
+    flattened = []
     for mapping_dict in serialized:
         position = mapping_dict["position"]
         if isinstance(position, str):

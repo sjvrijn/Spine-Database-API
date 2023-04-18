@@ -133,8 +133,11 @@ class _DBServerManager:
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
-        error = SpineDBClient(server.server_address).open_db_map(db_url, upgrade, memory).get("error")
-        if error:
+        if (
+            error := SpineDBClient(server.server_address)
+            .open_db_map(db_url, upgrade, memory)
+            .get("error")
+        ):
             raise RuntimeError(error)
         return server.server_address
 
@@ -155,8 +158,10 @@ class _DBServerManager:
         if not server:
             return
         ordering = server.ordering
-        checkouts = self._checkouts.get(ordering["id"], dict())
-        full_checkouts = set(x for x, count in checkouts.items() if count == self._CHECKOUT_COMPLETE)
+        checkouts = self._checkouts.get(ordering["id"], {})
+        full_checkouts = {
+            x for x, count in checkouts.items() if count == self._CHECKOUT_COMPLETE
+        }
         precursors = ordering["precursors"]
         if precursors <= full_checkouts:
             return
@@ -173,15 +178,17 @@ class _DBServerManager:
 
     def _quick_db_checkout(self, ordering):
         current = ordering["current"]
-        checkouts = self._checkouts.setdefault(ordering["id"], dict())
+        checkouts = self._checkouts.setdefault(ordering["id"], {})
         if current not in checkouts:
             checkouts[current] = 1
         elif checkouts[current] != self._CHECKOUT_COMPLETE:
             checkouts[current] += 1
         if checkouts[current] == ordering["part_count"]:
             checkouts[current] = self._CHECKOUT_COMPLETE
-        full_checkouts = set(x for x, count in checkouts.items() if count == self._CHECKOUT_COMPLETE)
-        waiters = self._waiters.get(ordering["id"], dict())
+        full_checkouts = {
+            x for x, count in checkouts.items() if count == self._CHECKOUT_COMPLETE
+        }
+        waiters = self._waiters.get(ordering["id"], {})
         done = [event for event, precursors in waiters.items() if precursors <= full_checkouts]
         for event in done:
             del waiters[event]
@@ -192,7 +199,7 @@ class _DBServerManager:
         if not server:
             return
         ordering = server.ordering
-        checkouts = self._checkouts.get(ordering["id"], dict())
+        checkouts = self._checkouts.get(ordering["id"], {})
         checkouts.pop(ordering["current"], None)
 
 
@@ -219,8 +226,7 @@ class _ManagerRequestHandler:
         return self._run_request("register_ordering", server_address, ordering)
 
     def db_checkin(self, server_address):
-        event = self._run_request("db_checkin", server_address)
-        if event:
+        if event := self._run_request("db_checkin", server_address):
             event.wait()
 
     def db_checkout(self, server_address):
@@ -535,8 +541,9 @@ class HandleDBMixin:
 class DBHandler(HandleDBMixin):
     def __init__(self, db_url, upgrade=False, memory=False):
         self.server_address = uuid.uuid4().hex
-        error = _db_manager.open_db_map(self.server_address, db_url, upgrade, memory).get("error")
-        if error:
+        if error := _db_manager.open_db_map(
+            self.server_address, db_url, upgrade, memory
+        ).get("error"):
             raise RuntimeError(error)
         atexit.register(self.close)
 
@@ -578,8 +585,7 @@ def start_spine_db_server(server_manager_queue, db_url, upgrade=False, memory=Fa
         tuple: server address (e.g. (127.0.0.1, 54321))
     """
     handler = _ManagerRequestHandler(server_manager_queue)
-    server_address = handler.start_server(db_url, upgrade, memory, ordering)
-    return server_address
+    return handler.start_server(db_url, upgrade, memory, ordering)
 
 
 def shutdown_spine_db_server(server_manager_queue, server_address):

@@ -124,13 +124,15 @@ class Mapping:
         self._data = self._fixed_value_data
 
     def __eq__(self, other):
-        if not isinstance(other, Mapping):
-            return NotImplemented
         return (
-            self.MAP_TYPE == other.MAP_TYPE
-            and self.position == other.position
-            and self.child == other.child
-            and self._filter_re == other._filter_re
+            (
+                self.MAP_TYPE == other.MAP_TYPE
+                and self.position == other.position
+                and self.child == other.child
+                and self._filter_re == other._filter_re
+            )
+            if isinstance(other, Mapping)
+            else NotImplemented
         )
 
     def tail_mapping(self):
@@ -139,9 +141,7 @@ class Mapping:
         Returns:
             Mapping: last child mapping
         """
-        if self._child is None:
-            return self
-        return self._child.tail_mapping()
+        return self if self._child is None else self._child.tail_mapping()
 
     def count_mappings(self):
         """
@@ -170,9 +170,7 @@ class Mapping:
         """
         if is_pivoted(self.position):
             return True
-        if self.child is None:
-            return False
-        return self.child.is_pivoted()
+        return False if self.child is None else self.child.is_pivoted()
 
     def non_pivoted_width(self, parent_is_pivoted=False):
         """
@@ -211,7 +209,12 @@ class Mapping:
 
     def last_pivot_row(self):
         return max(
-            [-(m.position + 1) for m in self.flatten() if isinstance(m.position, int) and m.position < 0], default=-1
+            (
+                -(m.position + 1)
+                for m in self.flatten()
+                if isinstance(m.position, int) and m.position < 0
+            ),
+            default=-1,
         )
 
     def query_parents(self, what):
@@ -223,9 +226,7 @@ class Mapping:
         Returns:
             Any: query result or None if no parent recognized the identifier
         """
-        if self.parent is None:
-            return None
-        return self.parent.query_parents(what)
+        return None if self.parent is None else self.parent.query_parents(what)
 
     def to_dict(self):
         """
@@ -292,4 +293,4 @@ def to_dict(root_mapping):
     Returns:
         list: serialized mappings
     """
-    return list(mapping.to_dict() for mapping in root_mapping.flatten())
+    return [mapping.to_dict() for mapping in root_mapping.flatten()]

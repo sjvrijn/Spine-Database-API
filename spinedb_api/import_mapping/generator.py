@@ -94,8 +94,7 @@ def get_mapped_data(
         read_state = {}
         mapping = deepcopy(mapping)
         mapping.polish(table_name, data_header)
-        mapping_errors = check_validity(mapping)
-        if mapping_errors:
+        if mapping_errors := check_validity(mapping):
             errors += mapping_errors
             continue
         # Find pivoted and unpivoted mappings
@@ -165,7 +164,7 @@ def get_mapped_data(
 
 
 def _is_valid_row(row):
-    return row is not None and not all(i is None for i in row)
+    return row is not None and any(i is not None for i in row)
 
 
 def _convert_row(row, convert_fns, row_number, errors, default_convert_fn=lambda x: x):
@@ -257,8 +256,9 @@ def _unpivot_rows(rows, data_header, pivoted, non_pivoted, pivoted_from_header, 
         expanded_pivoted_rows = []
         for row in unpivoted_rows:
             head = row[: last_pivoted_position + 1]
-            for data in row[last_pivoted_position + 1 :]:
-                expanded_pivoted_rows.append(head + [data])
+            expanded_pivoted_rows.extend(
+                head + [data] for data in row[last_pivoted_position + 1 :]
+            )
         unpivoted_rows = expanded_pivoted_rows
     unpivoted_column_pos = [k for k in range(len(rows[0])) if k not in skip_pos] if rows else []
     return unpivoted_rows, pivoted_pos, non_pivoted_pos, unpivoted_column_pos
@@ -268,9 +268,7 @@ def _make_relationship_classes(mapped_data):
     rows = mapped_data.get("relationship_classes")
     if rows is None:
         return
-    full_rows = []
-    for class_name, object_classes in rows.items():
-        full_rows.append((class_name, object_classes))
+    full_rows = list(rows.items())
     mapped_data["relationship_classes"] = full_rows
 
 
@@ -313,9 +311,7 @@ def _make_value(row, value_pos):
     except IndexError:
         return None
     if isinstance(value, dict):
-        if "data" not in value:
-            return _NO_VALUE
-        return _parameter_value_from_dict(value)
+        return _NO_VALUE if "data" not in value else _parameter_value_from_dict(value)
     if isinstance(value, str):
         try:
             return from_database(*split_value_and_type(value))
@@ -348,27 +344,25 @@ def _parameter_value_from_dict(d):
 def _table_to_map(table, compress=False):
     d = _table_to_dict(table)
     m = _dict_to_map_recursive(d)
-    if compress:
-        return convert_leaf_maps_to_specialized_containers(m)
-    return m
+    return convert_leaf_maps_to_specialized_containers(m) if compress else m
 
 
 def _table_to_dict(table):
-    map_dict = dict()
+    map_dict = {}
     for row in table:
         row = [item for item in row if item not in (None, "")]
         if len(row) < 2:
             continue
         d = map_dict
         for item in row[:-2]:
-            d = d.setdefault(item, dict())
+            d = d.setdefault(item, {})
         d[row[-2]] = row[-1]
     return map_dict
 
 
 def _dict_to_map_recursive(d):
-    indexes = list()
-    values = list()
+    indexes = []
+    values = []
     for key, value in d.items():
         if isinstance(value, dict):
             value = _dict_to_map_recursive(value)
@@ -384,8 +378,7 @@ def _apply_index_names(map_, index_names):
         map_ (Map): target Map.
         index_names (Sequence of str): index names, one for each Map depth
     """
-    name = index_names[0]
-    if name:
+    if name := index_names[0]:
         map_.index_name = index_names[0]
     if len(index_names) == 1:
         return

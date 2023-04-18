@@ -31,9 +31,7 @@ from spinedb_api import import_functions, SpineDBAPIError
 def create_query_wrapper(db_map):
     def query_wrapper(*args, orig_query=db_map.query, **kwargs):
         arg = args[0]
-        if isinstance(arg, mock.Mock):
-            return arg.value
-        return orig_query(*args, **kwargs)
+        return arg.value if isinstance(arg, mock.Mock) else orig_query(*args, **kwargs)
 
     return query_wrapper
 
@@ -47,7 +45,7 @@ def create_diff_db_map():
 
 class TestDiffDatabaseMappingConstruction(unittest.TestCase):
     def test_construction_with_filters(self):
-        db_url = IN_MEMORY_DB_URL + "?spinedbfilter=fltr1&spinedbfilter=fltr2"
+        db_url = f"{IN_MEMORY_DB_URL}?spinedbfilter=fltr1&spinedbfilter=fltr2"
         with mock.patch("spinedb_api.diff_db_mapping.apply_filter_stack") as mock_apply:
             with mock.patch(
                 "spinedb_api.diff_db_mapping.load_filters", return_value=[{"fltr1": "config1", "fltr2": "config2"}]
@@ -58,7 +56,7 @@ class TestDiffDatabaseMappingConstruction(unittest.TestCase):
                 mock_apply.assert_called_once_with(db_map, [{"fltr1": "config1", "fltr2": "config2"}])
 
     def test_construction_with_sqlalchemy_url_and_filters(self):
-        db_url = IN_MEMORY_DB_URL + "/?spinedbfilter=fltr1&spinedbfilter=fltr2"
+        db_url = f"{IN_MEMORY_DB_URL}/?spinedbfilter=fltr1&spinedbfilter=fltr2"
         sa_url = make_url(db_url)
         with mock.patch("spinedb_api.diff_db_mapping.apply_filter_stack") as mock_apply:
             with mock.patch(

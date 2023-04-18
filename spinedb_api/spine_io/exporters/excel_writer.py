@@ -75,16 +75,16 @@ class ExcelWriter(Writer):
     def _set_current_sheet(self):
         """Gets an existing sheet from workbook or creates a new one if needed."""
         if self._next_table_name is not None:
-            if self._next_table_name in self._workbook:
-                self._current_sheet = self._workbook[self._next_table_name]
-            else:
-                self._current_sheet = self._workbook.create_sheet(self._next_table_name)
+            self._current_sheet = (
+                self._workbook[self._next_table_name]
+                if self._next_table_name in self._workbook
+                else self._workbook.create_sheet(self._next_table_name)
+            )
+        elif self._default_sheet_title:
+            self._current_sheet = self._workbook[self._default_sheet_title]
         else:
-            if self._default_sheet_title:
-                self._current_sheet = self._workbook[self._default_sheet_title]
-            else:
-                self._current_sheet = self._workbook.create_sheet(None)
-                self._default_sheet_title = self._current_sheet.title
+            self._current_sheet = self._workbook.create_sheet(None)
+            self._default_sheet_title = self._current_sheet.title
         self._removable_sheet_names.discard(self._current_sheet.title)
 
     def write_row(self, row):
@@ -107,11 +107,7 @@ def _convert_to_excel(x):
         float or str: Excel compatible value
     """
     if isinstance(x, numpy.float_):
-        if numpy.isnan(x):
-            return "nan"
-        return float(x)
+        return "nan" if numpy.isnan(x) else float(x)
     if isinstance(x, numpy.int_):
         return int(x)
-    if not isinstance(x, (float, int, str)) and x is not None:
-        return str(x)
-    return x
+    return str(x) if not isinstance(x, (float, int, str)) and x is not None else x

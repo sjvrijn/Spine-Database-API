@@ -138,7 +138,6 @@ def _new_table(writer, table_name, title_key):
         bool: whether or not the new table was successfully started
     """
     try:
-        table_started = writer.start_table(table_name, title_key)
-        yield table_started
+        yield writer.start_table(table_name, title_key)
     finally:
         writer.finish_table()

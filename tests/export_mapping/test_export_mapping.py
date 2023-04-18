@@ -622,9 +622,10 @@ class TestExportMapping(unittest.TestCase):
         db_map.commit_session("Add test data.")
         object_class_mapping = ObjectClassMapping(Position.table_name)
         object_class_mapping.child = ObjectMapping(0)
-        tables = dict()
-        for title, title_key in titles(object_class_mapping, db_map):
-            tables[title] = list(rows(object_class_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(object_class_mapping, db_map, title_key))
+            for title, title_key in titles(object_class_mapping, db_map)
+        }
         self.assertEqual(tables, {"oc1": [["o11"], ["o12"]], "oc2": [["o21"]], "oc3": [["o31"], ["o32"], ["o33"]]})
         db_map.connection.close()
 
@@ -639,9 +640,10 @@ class TestExportMapping(unittest.TestCase):
         object_mapping = ObjectMapping(0)
         object_class_mapping.child = definition_mapping
         definition_mapping.child = object_mapping
-        tables = dict()
-        for title, title_key in titles(object_class_mapping, db_map):
-            tables[title] = list(rows(object_class_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(object_class_mapping, db_map, title_key))
+            for title, title_key in titles(object_class_mapping, db_map)
+        }
         self.assertEqual(
             tables, {"oc1,p11": [["o11"], ["o12"]], "oc2,p21": [["o21"]], "oc2,p22": [["o21"]], "oc3": [["o31"]]}
         )
@@ -655,9 +657,10 @@ class TestExportMapping(unittest.TestCase):
         import_relationships(db_map, (("rc", ("o1", "O")), ("rc", ("o2", "O"))))
         db_map.commit_session("Add test data.")
         mappings = relationship_export(0, Position.table_name, [1, 2], [Position.table_name, 3])
-        tables = dict()
-        for title, title_key in titles(mappings, db_map):
-            tables[title] = list(rows(mappings, db_map, title_key))
+        tables = {
+            title: list(rows(mappings, db_map, title_key))
+            for title, title_key in titles(mappings, db_map)
+        }
         self.assertEqual(
             tables, {"rc_o1__O,o1": [["rc", "oc1", "oc2", "O"]], "rc_o2__O,o2": [["rc", "oc1", "oc2", "O"]]}
         )
@@ -674,9 +677,10 @@ class TestExportMapping(unittest.TestCase):
         value_list_mapping = ParameterValueListMapping(2)
         definition_mapping.child = value_list_mapping
         class_mapping.child = definition_mapping
-        tables = dict()
-        for title, title_key in titles(class_mapping, db_map):
-            tables[title] = list(rows(class_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(class_mapping, db_map, title_key))
+            for title, title_key in titles(class_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["oc", "p1", "vl1"]]})
         db_map.connection.close()
 
@@ -697,9 +701,10 @@ class TestExportMapping(unittest.TestCase):
             ParameterValueMapping(4),
         ]
         mapping = unflatten(flattened)
-        tables = dict()
-        for title, title_key in titles(mapping, db_map):
-            tables[title] = list(rows(mapping, db_map, title_key))
+        tables = {
+            title: list(rows(mapping, db_map, title_key))
+            for title, title_key in titles(mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["oc", "p1", "vl", "o", -1.0]]})
         db_map.connection.close()
 
@@ -722,9 +727,10 @@ class TestExportMapping(unittest.TestCase):
             ParameterValueMapping(4),
         ]
         mapping = unflatten(flattened)
-        tables = dict()
-        for title, title_key in titles(mapping, db_map):
-            tables[title] = list(rows(mapping, db_map, title_key))
+        tables = {
+            title: list(rows(mapping, db_map, title_key))
+            for title, title_key in titles(mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["oc", "p1", "vl", "o", -1.0], ["oc", "p2", None, "o", 5.0]]})
         db_map.connection.close()
 
@@ -733,9 +739,10 @@ class TestExportMapping(unittest.TestCase):
         import_parameter_value_lists(db_map, (("vl1", -1.0), ("vl2", -2.0)))
         db_map.commit_session("Add test data.")
         value_list_mapping = ParameterValueListMapping(0)
-        tables = dict()
-        for title, title_key in titles(value_list_mapping, db_map):
-            tables[title] = list(rows(value_list_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(value_list_mapping, db_map, title_key))
+            for title, title_key in titles(value_list_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["vl1"], ["vl2"]]})
         db_map.connection.close()
 
@@ -746,9 +753,10 @@ class TestExportMapping(unittest.TestCase):
         value_list_mapping = ParameterValueListMapping(Position.table_name)
         value_mapping = ParameterValueListValueMapping(0)
         value_list_mapping.child = value_mapping
-        tables = dict()
-        for title, title_key in titles(value_list_mapping, db_map):
-            tables[title] = list(rows(value_list_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(value_list_mapping, db_map, title_key))
+            for title, title_key in titles(value_list_mapping, db_map)
+        }
         self.assertEqual(tables, {"vl1": [[-1.0]], "vl2": [[-2.0]]})
         db_map.connection.close()
 
@@ -763,9 +771,10 @@ class TestExportMapping(unittest.TestCase):
         object_mapping = ObjectMapping(0)
         object_class_mapping.child = definition_mapping
         definition_mapping.child = object_mapping
-        tables = dict()
-        for title, title_key in titles(object_class_mapping, db_map):
-            tables[title] = list(rows(object_class_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(object_class_mapping, db_map, title_key))
+            for title, title_key in titles(object_class_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["o11"], ["o12"], ["o21"], ["o21"]]})
         db_map.connection.close()
 
@@ -850,9 +859,10 @@ class TestExportMapping(unittest.TestCase):
         object_class_mapping2.child = relationship_mapping
         object_class_mapping1.child = object_class_mapping2
         relationship_class_mapping.child = object_class_mapping1
-        tables = dict()
-        for title, title_key in titles(relationship_class_mapping, db_map):
-            tables[title] = list(rows(relationship_class_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(relationship_class_mapping, db_map, title_key))
+            for title, title_key in titles(relationship_class_mapping, db_map)
+        }
         expected = [
             ["rc1D", "oc1", "", "o11", ""],
             ["rc1D", "oc1", "", "o12", ""],
@@ -945,9 +955,10 @@ class TestExportMapping(unittest.TestCase):
         constant_mapping = FixedValueMapping(Position.table_name, "title_text")
         object_class_mapping = ObjectClassMapping(0)
         constant_mapping.child = object_class_mapping
-        tables = dict()
-        for title, title_key in titles(constant_mapping, db_map):
-            tables[title] = list(rows(constant_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(constant_mapping, db_map, title_key))
+            for title, title_key in titles(constant_mapping, db_map)
+        }
         self.assertEqual(tables, {"title_text": [["oc1"], ["oc2"], ["oc3"]]})
         db_map.connection.close()
 
@@ -956,9 +967,10 @@ class TestExportMapping(unittest.TestCase):
         import_scenarios(db_map, ("s1", "s2"))
         db_map.commit_session("Add test data.")
         scenario_mapping = ScenarioMapping(0)
-        tables = dict()
-        for title, title_key in titles(scenario_mapping, db_map):
-            tables[title] = list(rows(scenario_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(scenario_mapping, db_map, title_key))
+            for title, title_key in titles(scenario_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["s1"], ["s2"]]})
         db_map.connection.close()
 
@@ -969,9 +981,10 @@ class TestExportMapping(unittest.TestCase):
         scenario_mapping = ScenarioMapping(0)
         active_flag_mapping = ScenarioActiveFlagMapping(1)
         scenario_mapping.child = active_flag_mapping
-        tables = dict()
-        for title, title_key in titles(scenario_mapping, db_map):
-            tables[title] = list(rows(scenario_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(scenario_mapping, db_map, title_key))
+            for title, title_key in titles(scenario_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["s1", True], ["s2", False]]})
         db_map.connection.close()
 
@@ -984,9 +997,10 @@ class TestExportMapping(unittest.TestCase):
         scenario_mapping = ScenarioMapping(0)
         scenario_alternative_mapping = ScenarioAlternativeMapping(1)
         scenario_mapping.child = scenario_alternative_mapping
-        tables = dict()
-        for title, title_key in titles(scenario_mapping, db_map):
-            tables[title] = list(rows(scenario_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(scenario_mapping, db_map, title_key))
+            for title, title_key in titles(scenario_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["s1", "a1"], ["s1", "a2"], ["s2", "a2"], ["s2", "a3"]]})
         db_map.connection.close()
 
@@ -995,9 +1009,10 @@ class TestExportMapping(unittest.TestCase):
         import_tools(db_map, ("tool1", "tool2"))
         db_map.commit_session("Add test data.")
         tool_mapping = ToolMapping(0)
-        tables = dict()
-        for title, title_key in titles(tool_mapping, db_map):
-            tables[title] = list(rows(tool_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(tool_mapping, db_map, title_key))
+            for title, title_key in titles(tool_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["tool1"], ["tool2"]]})
         db_map.connection.close()
 
@@ -1018,9 +1033,10 @@ class TestExportMapping(unittest.TestCase):
         class_mapping = FeatureEntityClassMapping(0)
         parameter_mapping = FeatureParameterDefinitionMapping(1)
         class_mapping.child = parameter_mapping
-        tables = dict()
-        for title, title_key in titles(class_mapping, db_map):
-            tables[title] = list(rows(class_mapping, db_map, title_key))
+        tables = {
+            title: list(rows(class_mapping, db_map, title_key))
+            for title, title_key in titles(class_mapping, db_map)
+        }
         self.assertEqual(tables, {None: [["oc1", "p2"], ["oc2", "p3"]]})
         db_map.connection.close()
 
@@ -1050,9 +1066,10 @@ class TestExportMapping(unittest.TestCase):
                 ToolFeatureRequiredFlagMapping(2),
             ]
         )
-        tables = dict()
-        for title, title_key in titles(mapping, db_map):
-            tables[title] = list(rows(mapping, db_map, title_key))
+        tables = {
+            title: list(rows(mapping, db_map, title_key))
+            for title, title_key in titles(mapping, db_map)
+        }
         expected = {"tool1": [["oc1", "p1", True], ["oc2", "p3", False]], "tool2": [["oc1", "p1", True]]}
         self.assertEqual(tables, expected)
         db_map.connection.close()
@@ -1092,9 +1109,10 @@ class TestExportMapping(unittest.TestCase):
                 ToolFeatureMethodMethodMapping(2),
             ]
         )
-        tables = dict()
-        for title, title_key in titles(mapping, db_map):
-            tables[title] = list(rows(mapping, db_map, title_key))
+        tables = {
+            title: list(rows(mapping, db_map, title_key))
+            for title, title_key in titles(mapping, db_map)
+        }
         expected = {
             "tool1": [["oc1", "p1", "feat1"], ["oc1", "p1", "feat2"]],
             "tool2": [["oc1", "p1", "feat1"], ["oc1", "p1", "feat2"]],
@@ -1518,9 +1536,10 @@ class TestExportMapping(unittest.TestCase):
         import_object_parameters(db_map, (("oc", "p"),))
         db_map.commit_session("Add test data.")
         mapping = object_parameter_export(Position.header, Position.table_name, object_position=0, value_position=1)
-        tables = dict()
-        for title, title_key in titles(mapping, db_map):
-            tables[title] = list(rows(mapping, db_map, title_key))
+        tables = {
+            title: list(rows(mapping, db_map, title_key))
+            for title, title_key in titles(mapping, db_map)
+        }
         expected = {"p": [["oc", ""]]}
         self.assertEqual(tables, expected)
         db_map.connection.close()

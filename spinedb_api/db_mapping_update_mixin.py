@@ -337,7 +337,7 @@ class DatabaseMappingUpdateMixin:
         scenario_alternative_ids = {
             (x.scenario_id, x.alternative_id): x.id for x in cache.get("scenario_alternative", {}).values()
         }
-        items_to_add = list()
+        items_to_add = []
         ids_to_remove = set()
         for item in items:
             scenario_id = item["id"]

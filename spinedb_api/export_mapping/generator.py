@@ -54,7 +54,7 @@ def rows(root_mapping, db_map, fixed_state=None, empty_data_header=True, group_f
         return straight
 
     if fixed_state is None:
-        fixed_state = dict()
+        fixed_state = {}
     if root_mapping.is_pivoted():
         root_mapping, value_column, regular_columns, hidden_columns, pivot_columns = make_regular(root_mapping)
         if root_mapping.has_header():
@@ -86,8 +86,7 @@ def rows(root_mapping, db_map, fixed_state=None, empty_data_header=True, group_f
             peeked_row = None
         if root_mapping.has_header():
             buddies = pair_header_buddies(root_mapping)
-            header = listify_row(root_mapping.make_header(db_map, fixed_state, buddies))
-            yield header
+            yield listify_row(root_mapping.make_header(db_map, fixed_state, buddies))
         if peeked_row is None:
             return
         yield peeked_row
@@ -108,6 +107,4 @@ def titles(root_mapping, db_map, limit=None):
     if not root_mapping.has_titles():
         yield None, None
         return
-    mapping_titles = root_mapping.titles(db_map, limit=limit)
-    for title, title_key in mapping_titles:
-        yield title, title_key
+    yield from root_mapping.titles(db_map, limit=limit)

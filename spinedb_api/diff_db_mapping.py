@@ -66,7 +66,7 @@ class DiffDatabaseMapping(
         return ids
 
     def _readd_items(self, tablename, *items):
-        ids = set(x["id"] for x in items)
+        ids = {x["id"] for x in items}
         for tablename_ in self._do_add_items(tablename, *items):
             self.added_item_id[tablename_].update(ids)
             self._clear_subqueries(tablename_)
@@ -78,8 +78,8 @@ class DiffDatabaseMapping(
         """Return lists of items for update and insert.
         Items in the diff table should be updated, whereas items in the original table
         should be marked as dirty and inserted into the corresponding diff table."""
-        items_for_update = list()
-        items_for_insert = list()
+        items_for_update = []
+        items_for_insert = []
         dirty_ids = set()
         updated_ids = set()
         id_field = self.table_ids.get(tablename, "id")
@@ -154,7 +154,7 @@ class DiffDatabaseMapping(
             self.updated_item_id["relationship_entity"].update(dirty_rel_ent_ids)
             return updated_ent_ids.union(updated_rel_ent_ids)
         except DBAPIError as e:
-            msg = "DBAPIError while updating relationships: {}".format(e.orig.args)
+            msg = f"DBAPIError while updating relationships: {e.orig.args}"
             raise SpineDBAPIError(msg)
 
     def remove_items(self, **kwargs):

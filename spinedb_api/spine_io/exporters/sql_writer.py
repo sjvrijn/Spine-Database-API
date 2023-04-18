@@ -32,7 +32,7 @@ class SqlWriter(Writer):
         super().__init__()
         self._overwrite_existing = overwrite_existing
         if database.find("://") < 0:
-            database = "sqlite:///" + database
+            database = f"sqlite:///{database}"
         self._engine = create_engine(database)
         self._connection = self._engine.connect()
         self._metadata = MetaData()

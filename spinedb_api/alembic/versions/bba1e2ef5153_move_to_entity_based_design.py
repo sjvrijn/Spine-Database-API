@@ -433,11 +433,14 @@ def alter_tables_after_update(meta):
         batch_op.drop_column("object_class_id")
         batch_op.drop_column("relationship_class_id")
         batch_op.alter_column("entity_class_id", nullable=False)
-        dummy_relationship_class = next(
-            (x.name for x in meta.tables["parameter_definition"].c if x.name.startswith("dummy_relationship_class")),
+        if dummy_relationship_class := next(
+            (
+                x.name
+                for x in meta.tables["parameter_definition"].c
+                if x.name.startswith("dummy_relationship_class")
+            ),
             None,
-        )
-        if dummy_relationship_class:
+        ):
             batch_op.drop_column(dummy_relationship_class)
     with op.batch_alter_table("parameter_value") as batch_op:
         batch_op.drop_constraint("ck_parameter_value_obj_or_rel_id_is_not_null")
@@ -445,10 +448,14 @@ def alter_tables_after_update(meta):
         batch_op.drop_column("relationship_id")
         batch_op.alter_column("entity_class_id", nullable=False)
         batch_op.alter_column("entity_id", nullable=False)
-        dummy_relationship = next(
-            (x.name for x in meta.tables["parameter_value"].c if x.name.startswith("dummy_relationship")), None
-        )
-        if dummy_relationship:
+        if dummy_relationship := next(
+            (
+                x.name
+                for x in meta.tables["parameter_value"].c
+                if x.name.startswith("dummy_relationship")
+            ),
+            None,
+        ):
             batch_op.drop_column(dummy_relationship)
         batch_op.create_foreign_key(
             None,

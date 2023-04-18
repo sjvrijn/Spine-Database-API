@@ -35,8 +35,8 @@ class GdxWriter(Writer):
         self._file_path = file_path
         self._gams_dir = gams_directory
         self._gdx_file = None
-        self._tables = dict()
-        self._table_dimensions = dict()
+        self._tables = {}
+        self._table_dimensions = {}
         self._current_table_name = None
         self._current_table = None
         self._dimensions_missing = True
@@ -52,7 +52,9 @@ class GdxWriter(Writer):
     def finish_table(self):
         if self._current_table_name is None:
             return
-        self._tables.setdefault(self._current_table_name, list()).extend(self._current_table)
+        self._tables.setdefault(self._current_table_name, []).extend(
+            self._current_table
+        )
         self._current_table_name = None
 
     def start(self):
@@ -67,7 +69,7 @@ class GdxWriter(Writer):
         if table_name in self._gdx_file:
             raise WriterException("Gdx does not support appending data to existing sets.")
         self._current_table_name = table_name
-        self._current_table = list()
+        self._current_table = []
         self._dimensions_missing = True
         return True
 
@@ -76,11 +78,10 @@ class GdxWriter(Writer):
         if not self._current_table and self._dimensions_missing and row and isinstance(row[0], str):
             dimensions = tuple(row)
             previous_dimensions = self._table_dimensions.get(self._current_table_name)
-            if previous_dimensions is not None:
-                if dimensions != previous_dimensions:
-                    raise WriterException(f"Cannot append to `{self._current_table_name}`: dimensions don't match.")
-            else:
+            if previous_dimensions is None:
                 self._table_dimensions[self._current_table_name] = dimensions
+            elif dimensions != previous_dimensions:
+                raise WriterException(f"Cannot append to `{self._current_table_name}`: dimensions don't match.")
             self._dimensions_missing = False
             return True
         self._current_table.append(tuple(row))
@@ -116,7 +117,9 @@ def _table_to_gdx(gdx_file, table, table_name, dimensions):
         gdx_file[table_name] = set_
     except TypeError as e:
         if isinstance(set_, GAMSSet):
-            raise WriterException(f"A column contains a mixture of numeric and non-numeric elements.")
+            raise WriterException(
+                "A column contains a mixture of numeric and non-numeric elements."
+            )
         raise e
     except ValueError as e:
         if isinstance(set_, GAMSParameter):
@@ -135,6 +138,4 @@ def _convert_to_gams(x):
     """
     if not isinstance(x, float):
         return x
-    if math.isnan(x):
-        return gdxcc.GMS_SV_UNDEF
-    return SPECIAL_CONVERSIONS.get(x, x)
+    return gdxcc.GMS_SV_UNDEF if math.isnan(x) else SPECIAL_CONVERSIONS.get(x, x)

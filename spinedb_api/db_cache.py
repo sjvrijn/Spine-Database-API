@@ -36,9 +36,7 @@ class DBCache(dict):
     def get_item(self, item_type, id_):
         table_cache = self.get(item_type, {})
         item = table_cache.get(id_)
-        if item is None:
-            return {}
-        return item
+        return {} if item is None else item
 
     def fetch_ref(self, item_type, id_):
         while self._advance_query(item_type):
@@ -144,9 +142,7 @@ class CacheItem(dict):
 
     @property
     def key(self):
-        if dict.get(self, "id") is None:
-            return None
-        return (self._item_type, self["id"])
+        return None if dict.get(self, "id") is None else (self._item_type, self["id"])
 
     def __getattr__(self, name):
         """Overridden method to return the dictionary key named after the attribute, or None if it doesn't exist."""
@@ -170,9 +166,9 @@ class CacheItem(dict):
             if source_key not in self._reference_keys():
                 return {}
             ref = self._db_cache.fetch_ref(ref_type, ref_id)
-            if not ref:
-                self._corrupted = True
-                return {}
+        if not ref:
+            self._corrupted = True
+            return {}
         return self._handle_ref(ref, source_key)
 
     def _handle_ref(self, ref, source_key):
@@ -231,10 +227,9 @@ class CacheItem(dict):
             referrer.cascade_readd()
         for weak_referrer in self._weak_referrers.values():
             weak_referrer.call_update_callbacks()
-        obsolete = set()
-        for callback in self.readd_callbacks:
-            if not callback(self):
-                obsolete.add(callback)
+        obsolete = {
+            callback for callback in self.readd_callbacks if not callback(self)
+        }
         self.readd_callbacks -= obsolete
 
     def cascade_remove(self):
@@ -243,10 +238,9 @@ class CacheItem(dict):
         self._removed = True
         self._to_remove = False
         self._valid = None
-        obsolete = set()
-        for callback in self.remove_callbacks:
-            if not callback(self):
-                obsolete.add(callback)
+        obsolete = {
+            callback for callback in self.remove_callbacks if not callback(self)
+        }
         self.remove_callbacks -= obsolete
         for referrer in self._referrers.values():
             referrer.cascade_remove()
@@ -262,10 +256,9 @@ class CacheItem(dict):
 
     def call_update_callbacks(self):
         self.pop("parsed_value", None)
-        obsolete = set()
-        for callback in self.update_callbacks:
-            if not callback(self):
-                obsolete.add(callback)
+        obsolete = {
+            callback for callback in self.update_callbacks if not callback(self)
+        }
         self.update_callbacks -= obsolete
 
 

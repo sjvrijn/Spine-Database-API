@@ -74,7 +74,7 @@ def entity_class_renamer_config_to_shorthand(config):
     """
     shorthand = ""
     for old_name, new_name in config["name_map"].items():
-        shorthand = shorthand + ":" + old_name + ":" + new_name
+        shorthand = f"{shorthand}:{old_name}:{new_name}"
     return ENTITY_CLASS_RENAMER_SHORTHAND_TAG + shorthand
 
 
@@ -89,9 +89,7 @@ def entity_class_renamer_shorthand_to_config(shorthand):
         dict: renamer configuration
     """
     names = shorthand.split(":")
-    name_map = {}
-    for old_name, new_name in zip(names[1::2], names[2::2]):
-        name_map[old_name] = new_name
+    name_map = dict(zip(names[1::2], names[2::2]))
     return entity_class_renamer_config(**name_map)
 
 
@@ -145,7 +143,7 @@ def parameter_renamer_config_to_shorthand(config):
     shorthand = ""
     for class_name, renaming in config["name_map"].items():
         for old_name, new_name in renaming.items():
-            shorthand = shorthand + ":" + class_name + ":" + old_name + ":" + new_name
+            shorthand = f"{shorthand}:{class_name}:{old_name}:{new_name}"
     return PARAMETER_RENAMER_SHORTHAND_TAG + shorthand
 
 
@@ -210,7 +208,7 @@ def _make_renaming_entity_class_sq(db_map, state):
         return subquery
     cases = [(subquery.c.id == id, new_name) for id, new_name in state.id_to_name.items()]
     new_class_name = case(cases, else_=subquery.c.name)  # if not in the name map, just keep the original name
-    entity_class_sq = db_map.query(
+    return db_map.query(
         subquery.c.id,
         subquery.c.type_id,
         new_class_name.label("name"),
@@ -220,7 +218,6 @@ def _make_renaming_entity_class_sq(db_map, state):
         subquery.c.hidden,
         subquery.c.commit_id,
     ).subquery()
-    return entity_class_sq
 
 
 class _ParameterRenamerState:
@@ -244,7 +241,9 @@ class _ParameterRenamerState:
             dict: a mapping from entity class id to a new name
         """
         class_names = set(name_map.keys())
-        param_names = set(old_name for renaming in name_map.values() for old_name in renaming)
+        param_names = {
+            old_name for renaming in name_map.values() for old_name in renaming
+        }
         id_to_names = {
             (definition_row.entity_class_name, definition_row.parameter_name): definition_row.id
             for definition_row in db_map.query(db_map.entity_parameter_definition_sq).filter(
@@ -271,7 +270,7 @@ def _make_renaming_parameter_definition_sq(db_map, state):
         return subquery
     cases = [(subquery.c.id == id, new_name) for id, new_name in state.id_to_name.items()]
     new_parameter_name = case(cases, else_=subquery.c.name)  # if not in the name map, just keep the original name
-    parameter_definition_sq = db_map.query(
+    return db_map.query(
         subquery.c.id,
         new_parameter_name.label("name"),
         subquery.c.description,
@@ -284,4 +283,3 @@ def _make_renaming_parameter_definition_sq(db_map, state):
         subquery.c.commit_id,
         subquery.c.parameter_value_list_id,
     ).subquery()
-    return parameter_definition_sq

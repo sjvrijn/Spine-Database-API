@@ -179,7 +179,7 @@ def check_wide_relationship_class(wide_item, current_items, object_class_ids, re
         )
     if not given_object_class_id_list:
         raise SpineIntegrityError(f"At least one object class is needed for the relationship class '{name}'.")
-    if not all(id_ in object_class_ids for id_ in given_object_class_id_list):
+    if any(id_ not in object_class_ids for id_ in given_object_class_id_list):
         raise SpineIntegrityError(
             f"At least one of the object class ids of the relationship class '{name}' is not in the database."
         )
@@ -257,9 +257,7 @@ def check_wide_relationship(
         object_name_list = [objects[id]["name"] for id in object_id_list]
         relationship_class_name = relationship_classes[class_id]["name"]
         raise SpineIntegrityError(
-            "There's already a relationship between objects {} in class {}.".format(
-                object_name_list, relationship_class_name
-            ),
+            f"There's already a relationship between objects {object_name_list} in class {relationship_class_name}.",
             id=current_items_by_obj_lst[class_id, object_id_list],
         )
 
@@ -386,12 +384,14 @@ def check_parameter_value(
     if entity_class_id != parameter_definition["entity_class_id"]:
         entity_name = entities[entity_id]["name"]
         parameter_name = parameter_definition["name"]
-        raise SpineIntegrityError("Incorrect entity '{}' for parameter '{}'.".format(entity_name, parameter_name))
+        raise SpineIntegrityError(
+            f"Incorrect entity '{entity_name}' for parameter '{parameter_name}'."
+        )
     if (entity_id, parameter_definition_id, alt_id) in current_items:
         entity_name = entities[entity_id]["name"]
         parameter_name = parameter_definition["name"]
         raise SpineIntegrityError(
-            "The value of parameter '{}' for entity '{}' is already specified.".format(parameter_name, entity_name),
+            f"The value of parameter '{parameter_name}' for entity '{entity_name}' is already specified.",
             id=current_items[entity_id, parameter_definition_id, alt_id],
         )
     replace_parameter_values_with_list_references(item, parameter_definitions, parameter_value_lists, list_values)
@@ -461,7 +461,8 @@ def check_parameter_value_list(item, current_items):
         raise SpineIntegrityError("Missing parameter value list name.")
     if name in current_items:
         raise SpineIntegrityError(
-            "There can't be more than one parameter value_list called '{}'.".format(name), id=current_items[name]
+            f"There can't be more than one parameter value_list called '{name}'.",
+            id=current_items[name],
         )
 
 
@@ -478,8 +479,7 @@ def check_list_value(item, list_names_by_id, list_value_ids_by_index, list_value
         SpineIntegrityError: if the insertion of the item violates an integrity constraint.
     """
     keys = {"parameter_value_list_id", "index", "value", "type"}
-    missing_keys = keys - item.keys()
-    if missing_keys:
+    if missing_keys := keys - item.keys():
         raise SpineIntegrityError(f"Missing keys: {', '.join(missing_keys)}.")
     list_id = item["parameter_value_list_id"]
     list_name = list_names_by_id.get(list_id)
@@ -598,8 +598,7 @@ def check_metadata(item, metadata):
         SpineIntegrityError: if the item violates an integrity constraint.
     """
     keys = {"name", "value"}
-    missing_keys = keys - item.keys()
-    if missing_keys:
+    if missing_keys := keys - item.keys():
         raise SpineIntegrityError(f"Missing keys: {', '.join(missing_keys)}.")
 
 
@@ -615,8 +614,7 @@ def check_entity_metadata(item, entities, metadata):
         SpineIntegrityError: if the item violates an integrity constraint.
     """
     keys = {"entity_id", "metadata_id"}
-    missing_keys = keys - item.keys()
-    if missing_keys:
+    if missing_keys := keys - item.keys():
         raise SpineIntegrityError(f"Missing keys: {', '.join(missing_keys)}.")
     if item["entity_id"] not in entities:
         raise SpineIntegrityError("Unknown entity identifier.")
@@ -636,8 +634,7 @@ def check_parameter_value_metadata(item, values, metadata):
         SpineIntegrityError: if the item violates an integrity constraint.
     """
     keys = {"parameter_value_id", "metadata_id"}
-    missing_keys = keys - item.keys()
-    if missing_keys:
+    if missing_keys := keys - item.keys():
         raise SpineIntegrityError(f"Missing keys: {', '.join(missing_keys)}.")
     if item["parameter_value_id"] not in values:
         raise SpineIntegrityError("Unknown parameter value identifier.")

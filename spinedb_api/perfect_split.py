@@ -42,16 +42,25 @@ def perfect_split(input_urls, intersection_url, diff_urls):
     right_urls = list(input_data_set_iter)
     left_data_set = input_data_sets[left_url]
     for tablename, left in left_data_set.items():
-        intersection = [x for x in left if all(x in input_data_sets[url][tablename] for url in right_urls)]
-        if intersection:
+        if intersection := [
+            x
+            for x in left
+            if all(x in input_data_sets[url][tablename] for url in right_urls)
+        ]:
             intersection_data[tablename] = intersection
     diffs_data = {}
     for left_url in input_data_sets:
         right_urls = [url for url in input_data_sets if url != left_url]
         left_data_set = input_data_sets[left_url]
         for tablename, left in left_data_set.items():
-            left_diff = [x for x in left if all(x not in input_data_sets[url][tablename] for url in right_urls)]
-            if left_diff:
+            if left_diff := [
+                x
+                for x in left
+                if all(
+                    x not in input_data_sets[url][tablename]
+                    for url in right_urls
+                )
+            ]:
                 diff_data = diffs_data.setdefault(left_url, {})
                 diff_data[tablename] = left_diff
     if intersection_data:
@@ -127,9 +136,11 @@ def _add_relationship_references(data, lookup):
             "relationship_classes", {}
         ).get(rel_cls_key)
         obj_cls_name_lst = rel_cls[1]
-        for obj_key in zip(obj_cls_name_lst, obj_name_lst):
-            if obj_key not in self_lookup.get("objects", ()):
-                ref_objects.append(lookup.get("objects", {}).get(obj_key, obj_key))
+        ref_objects.extend(
+            lookup.get("objects", {}).get(obj_key, obj_key)
+            for obj_key in zip(obj_cls_name_lst, obj_name_lst)
+            if obj_key not in self_lookup.get("objects", ())
+        )
         if rel_cls_key not in self_lookup.get("relationship_classes", ()):
             ref_relationship_classes.append(lookup.get("relationship_classes", {}).get(rel_cls_key, rel_cls_key))
     if ref_objects:
